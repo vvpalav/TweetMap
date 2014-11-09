@@ -15,7 +15,7 @@ import twitter4j.conf.ConfigurationBuilder;
  *
  * @author Yusuke Yamamoto - yusuke at mac.com
  */
-public final class TweetGet {
+public final class TweetReader {
     /**
      * Main entry of this application.
      *
