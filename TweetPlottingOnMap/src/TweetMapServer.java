@@ -1,11 +1,15 @@
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import twitter4j.JSONObject;
+import twitter4j.JSONArray;
+
+import com.DBHelper;
+import com.TweetNode;
 
 
 public class TweetMapServer extends HttpServlet{
@@ -17,6 +21,13 @@ public class TweetMapServer extends HttpServlet{
 			throws ServletException, IOException {
 		super.doGet(req, resp);
 		
-		JSONObject json = new JSONObject();
+		JSONArray array = new JSONArray();
+		DBHelper db = new DBHelper();
+		List<TweetNode> list = db.getAllTweetsFromDB();
+		for(TweetNode node : list){
+			array.put(node.toJSON());
+		}
+		resp.getWriter().println(array.toString());
+		db.close();
 	}
 }
