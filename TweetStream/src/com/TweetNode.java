@@ -1,49 +1,63 @@
 package com;
 
+import java.util.Date;
+
 import twitter4j.JSONException;
 import twitter4j.JSONObject;
 
 public class TweetNode {
 
-	private int id;
-	private String latitude;
-	private String longitude;
-	private String timestamp;
-	
-	public TweetNode(int id, String lon, String lat, String timestamp){
+	private long id;
+	private double latitude;
+	private double longitude;
+	private Date timestamp;
+	private String username;
+	private String text;
+
+	public TweetNode(long id, String user, String text, double lon, double lat, Date timestamp) {
 		this.id = id;
+		this.username = user;
+		this.text = text;
 		this.latitude = lat;
 		this.longitude = lon;
 		this.timestamp = timestamp;
 	}
-	
-	public int getId(){
+
+	public long getId() {
 		return this.id;
 	}
+
+	public String getUsername() {
+		return username;
+	}
 	
-	public String getLongitude(){
+	public String getText() {
+		return text;
+	}
+	
+	public double getLongitude() {
 		return this.longitude;
 	}
-	
-	public String getLatitude(){
+
+	public double getLatitude() {
 		return this.latitude;
 	}
-	
-	public String getTimestamp(){
+
+	public Date getTimestamp() {
 		return this.timestamp;
 	}
-	
+
 	public String toString() {
 		return "Tweet Id: " + id + " Latitude: " + latitude + " Longitude: "
-				+ longitude + " Timestamp: " + timestamp;
+				+ longitude + " Timestamp: " + timestamp.toString();
 	}
-	
-	public JSONObject toJSON(){
+
+	public JSONObject toJSON() {
 		JSONObject json = new JSONObject();
 		try {
 			json.put("latitude", getLatitude());
 			json.put("longitude", getLongitude());
-			json.put("timestamp", getTimestamp());
+			json.put("timestamp", getTimestamp().toString());
 			json.put("id", getId());
 		} catch (JSONException e) {
 			System.out.println("Failed to convert TweetNode to JSONObject");

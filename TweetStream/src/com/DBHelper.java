@@ -1,5 +1,6 @@
 package com;
 
+import java.util.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +20,8 @@ public class DBHelper {
 		try {
 			System.out.println("Connecting to database");
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = (Connection) DriverManager.getConnection(dbURL, dbUser, dbPassword);
+			conn = (Connection) DriverManager.getConnection(dbURL, dbUser,
+					dbPassword);
 			System.out.println("Connected to database");
 		} catch (SQLException | ClassNotFoundException e) {
 			System.out.println("Cannot connect the database!");
@@ -28,13 +30,15 @@ public class DBHelper {
 	}
 
 	public void insertTweetIntoDB(TweetNode node) {
-		String SQL = "insert into tweets values (?, ?, ?, ?)";
+		String SQL = "insert into tweets values (?, ?, ?, ?, ?, ?)";
 		try {
 			PreparedStatement stmt = conn.prepareStatement(SQL);
-			stmt.setObject(1, node.getId(), java.sql.Types.INTEGER);
-			stmt.setObject(2, node.getLatitude(), java.sql.Types.VARCHAR);
-			stmt.setObject(3, node.getLongitude(), java.sql.Types.VARCHAR);
-			stmt.setObject(4, node.getTimestamp(), java.sql.Types.TIMESTAMP);
+			stmt.setObject(1, node.getId(), java.sql.Types.BIGINT);
+			stmt.setObject(2, node.getUsername(), java.sql.Types.VARCHAR);
+			stmt.setObject(3, node.getText(), java.sql.Types.VARCHAR);
+			stmt.setObject(4, node.getLatitude(), java.sql.Types.DOUBLE);
+			stmt.setObject(5, node.getLongitude(), java.sql.Types.DOUBLE);
+			stmt.setObject(6, node.getTimestamp(), java.sql.Types.TIMESTAMP);
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("Error while inserting tweet into database");
@@ -44,12 +48,17 @@ public class DBHelper {
 
 	public List<TweetNode> getAllTweetsFromDB() {
 		List<TweetNode> list = new LinkedList<TweetNode>();
-		String SQL = "select tweetId, latitude, longitude, tweetdatetime from tweets";
+		String SQL = "select * from tweets";
 		try {
 			ResultSet rs = conn.createStatement().executeQuery(SQL);
 			while (rs.next()) {
-				TweetNode node = new TweetNode(rs.getInt(1), rs.getString(2),
-						rs.getString(3), rs.getObject(4, String.class));
+				TweetNode node = new TweetNode(
+						rs.getObject(1, long.class),
+						rs.getObject(2, String.class),
+						rs.getObject(3, String.class),
+						rs.getObject(4, double.class), 
+						rs.getObject(5, double.class), 
+						rs.getObject(6, Date.class));
 				list.add(node);
 			}
 		} catch (SQLException e) {
@@ -58,13 +67,24 @@ public class DBHelper {
 		}
 		return list;
 	}
-	
-	public void deleteAllTweetsFromDB(){
+
+	public void deleteAllTweetsFromDB() {
 		try {
 			System.out.println("Deleting all the tweets from database");
 			conn.createStatement().executeUpdate("delete from tweets");
 		} catch (SQLException e) {
 			System.out.println("Deletion of all the tweets failed");
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteTweetWithStatusId(long id) {
+		String SQL = "delete from tweets where id = ?";
+		try {
+			PreparedStatement stmt = conn.prepareStatement(SQL);
+			stmt.setObject(1, id, java.sql.Types.BIGINT);
+			stmt.executeUpdate();
+		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
