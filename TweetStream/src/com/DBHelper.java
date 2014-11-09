@@ -15,17 +15,6 @@ public class DBHelper {
 	private final String dbPassword = "edge_123";
 	private Connection conn;
 
-	public static void main(String[] args) {
-
-		DBHelper db = new DBHelper();
-		db.insertTweetIntoDB(new TweetNode(5, "9109", "181", "2014/11/01 10:00:00"));
-		//db.deleteAllTweetsFromDB();
-		for (TweetNode node : db.getAllTweetsFromDB()) {
-			System.out.println(node);
-		}
-		db.close();
-	}
-
 	public DBHelper() {
 		try {
 			System.out.println("Connecting to database");
