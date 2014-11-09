@@ -9,11 +9,9 @@ import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
 /**
- * <p>This is a code example of Twitter4J Streaming API - sample method support.<br>
- * Usage: java twitter4j.examples.PrintSampleStream<br>
- * </p>
- *
- * @author Yusuke Yamamoto - yusuke at mac.com
+ * This is a code example of Twitter4J Streaming API - sample method support.
+ * Usage: java twitter4j.examples.PrintSampleStream
+ * 
  */
 public final class TweetReader {
     /**
