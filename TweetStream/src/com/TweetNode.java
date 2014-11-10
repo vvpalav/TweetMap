@@ -14,7 +14,7 @@ public class TweetNode {
 	private String username;
 	private String text;
 
-	public TweetNode(long id, String user, String text, double lon, double lat, Date timestamp) {
+	public TweetNode(long id, String user, String text, double lat, double lon, Date timestamp) {
 		this.id = id;
 		this.username = user;
 		this.text = text;
@@ -48,8 +48,9 @@ public class TweetNode {
 	}
 
 	public String toString() {
-		return "Tweet Id: " + id + " Latitude: " + latitude + " Longitude: "
-				+ longitude + " Timestamp: " + timestamp.toString();
+		return "Tweet Id: " + id + " username: " + username + " text: " + text
+				+ " Latitude: " + latitude + " Longitude: " + longitude
+				+ " Timestamp: " + timestamp.toString();
 	}
 
 	public JSONObject toJSON() {

@@ -1,6 +1,6 @@
 package com;
 
-import java.util.Date;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +16,17 @@ public class DBHelper {
 	private final String dbPassword = "edge_123";
 	private Connection conn;
 
+	public static void main(String[] args){
+		DBHelper db = new DBHelper();
+		TweetNode node = new TweetNode(2, "vinayak", "sometext", 
+				38.898556, -77.037852, new java.util.Date());
+		db.insertTweetIntoDB(node);
+		for(TweetNode n : db.getAllTweetsFromDB()){
+			System.out.println(n);
+		}
+		db.close();
+	}
+	
 	public DBHelper() {
 		try {
 			System.out.println("Connecting to database");
@@ -78,15 +89,35 @@ public class DBHelper {
 		}
 	}
 
-	public void deleteTweetWithStatusId(long id) {
-		String SQL = "delete from tweets where id = ?";
+	public void deleteTweetWithStatusId(LinkedList<Long> list) {
+		StringBuilder ids = new StringBuilder();
+		ids.append("(");
+		for(long no : list){
+			ids.append(no).append(", ");
+		}
+		ids.setLength(ids.length()-2);
+		ids.append(")");
+		//System.out.println(ids);
+		
+		String SQL = "delete from tweets where id in " + ids.toString();
 		try {
 			PreparedStatement stmt = conn.prepareStatement(SQL);
-			stmt.setObject(1, id, java.sql.Types.BIGINT);
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public int getTweetCount() {
+		String SQL = "select count(*) from tweets";
+		try{
+			ResultSet rs = conn.createStatement().executeQuery(SQL);
+			rs.next();
+			return rs.getObject(1, int.class);
+		} catch(SQLException e){
+			e.printStackTrace();
+		}
+		return 0;
 	}
 
 	public void close() {
