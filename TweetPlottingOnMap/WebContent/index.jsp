@@ -54,9 +54,8 @@
 			mapTypeId:google.maps.MapTypeId.ROADMAP
   		};
 		var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-		
-		kw = myVar.keywords;
 		var dropdown = document.getElementById("selectKeyword");
+		kw = myVar.keywords;
 	    for (var i = 0; i < kw.length; i++){    
 	    	var optn = document.createElement("OPTION");
 		    optn.text = kw[i];
@@ -76,17 +75,28 @@
 		}
 	}
 	
-	$(document).ready(function() {
-		$("#selectKeyword").change(function() {
-	    	var srch= $("#selectKeyword").val();
-	    	rcvReq = sendRequestToServer("input=" + srch);
-	    });
-	});
-
+	function getTweets(){
+		var elem = document.getElementById('selectKeyword');
+		var strUser = elem.options[elem.selectedIndex].value;
+		if(strUser == "Choose a keyword") {
+			alert("Please select twitter id");
+		} else {
+			emptyComboBox(elem);
+			rcvReq = sendRequestToServer("input=" + strUser);
+		}
+	}
+	
+	function emptyComboBox(comboBox) {
+    	while(comboBox.options.length > 1){                
+    		comboBox.remove(1);
+    	}
+	}
+	
 </script>
 </head>
 <body>
 	<div id="panel">
+		<button onclick="getTweets()">Get Tweets</button>
 		<select id="selectKeyword">
    			<option>Choose a keyword</option>
 		</select>
