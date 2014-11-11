@@ -1,6 +1,9 @@
-package com;
+package com.example.servlet;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -17,7 +20,8 @@ import com.TweetNode;
 public class TweetMapServer extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
-
+	private final Logger log = Logger.getLogger(TweetMapServer.class.getName());
+	
 	public static void main(String[] args){
 		DBHelper db = new DBHelper();
 		TweetNode node = new TweetNode(2, "vinayak", "sometext", 
@@ -32,7 +36,8 @@ public class TweetMapServer extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		System.out.println("Got the request");
+		super.doGet(req, resp);
+        log.log(Level.SEVERE, "Got the doGet Request");
 		try {
 			JSONArray array = new JSONArray();
 			DBHelper db = new DBHelper();
@@ -43,12 +48,14 @@ public class TweetMapServer extends HttpServlet {
 			JSONObject json = new JSONObject();
 			json.put("latlon", array);
 			resp.setContentType("text/json");
-			resp.getWriter().println(json.toString());
+			PrintWriter print = resp.getWriter();
+			print.println(json.toString());
+			print.flush();
+			print.close();
 			resp.flushBuffer();
 			db.close();
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		super.doGet(req, resp);
 	}
 }
