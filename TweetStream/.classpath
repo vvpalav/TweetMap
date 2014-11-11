@@ -8,6 +8,5 @@
 	<classpathentry kind="lib" path="lib/twitter4j-media-support-4.0.2.jar"/>
 	<classpathentry kind="lib" path="lib/twitter4j-stream-4.0.2.jar"/>
 	<classpathentry kind="lib" path="/Users/vinayakpalav/git/TweetMap/TweetStream/lib/mysql-connector-java-5.1.33-bin.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/TweetPlottingOnMap"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -41,7 +41,7 @@
 	
 	function handleResponse(){
 		if (rcvReq.readyState == 4) {
-			alert(rcvReq.responseText);
+			//alert(rcvReq.responseText);
 			initialize(JSON.parse(rcvReq.responseText));
 			google.maps.event.addDomListener(window, 'load', initialize);
 		}

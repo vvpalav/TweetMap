@@ -11,12 +11,14 @@
   </welcome-file-list>
     
   <servlet>
+  	  <display-name>TweetMapServer</display-name>
       <servlet-name>TweetMapServer</servlet-name>
-      <servlet-class>com.example.servlet.TweetMapServer</servlet-class>
+      <servlet-class>TweetMapServer</servlet-class>
   </servlet>
   
   <servlet-mapping>
       <servlet-name>TweetMapServer</servlet-name>
       <url-pattern>/TweetMapServer</url-pattern>
   </servlet-mapping>
+  
 </web-app>
