@@ -18,11 +18,5 @@
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/vinayakpalav/git/TweetMap/TweetStream/lib/mysql-connector-java-5.1.33-bin.jar"/>
-	<classpathentry kind="lib" path="/Users/vinayakpalav/git/TweetMap/TweetStream/lib/twitter4j-async-4.0.2.jar"/>
-	<classpathentry kind="lib" path="/Users/vinayakpalav/git/TweetMap/TweetStream/lib/twitter4j-core-4.0.2.jar"/>
-	<classpathentry kind="lib" path="/Users/vinayakpalav/git/TweetMap/TweetStream/lib/twitter4j-examples-4.0.2.jar"/>
-	<classpathentry kind="lib" path="/Users/vinayakpalav/git/TweetMap/TweetStream/lib/twitter4j-media-support-4.0.2.jar"/>
-	<classpathentry kind="lib" path="/Users/vinayakpalav/git/TweetMap/TweetStream/lib/twitter4j-stream-4.0.2.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

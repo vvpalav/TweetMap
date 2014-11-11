@@ -1,6 +1,7 @@
 package com.example.servlet;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -17,31 +18,29 @@ import twitter4j.JSONObject;
 public class TweetMapServer extends HttpServlet {
 
 	private static final long serialVersionUID = 10283173239L;
+
+	public TweetMapServer(){
+		super();
+	}
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		String word = req.getParameter("input");
-		if (word != null && word.equals("None"))
-			word = null;
-		JSONObject json = TweetMapServer.retrieveTweetData(word);
-		resp.setContentType("text/json");
-		resp.getWriter().println(json.toString());
-		resp.flushBuffer();
-		super.doGet(req, resp);
+		doPost(req, resp);
 	}
-
+	
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		String word = req.getParameter("input");
-		if (word != null && word.equals("None"))
+		if (word != null && word.equals("NoKeyword"))
 			word = null;
-		JSONObject json = TweetMapServer.retrieveTweetData(word);
+		JSONObject json = retrieveTweetData(word);
 		resp.setContentType("text/json");
-		resp.getWriter().println(json.toString());
-		resp.flushBuffer();
-		super.doPost(req, resp);
+		resp.setContentType("text/plaintext");
+		PrintWriter out = resp.getWriter();
+		out.println(json.toString());
+		out.flush(); out.close();
 	}
 
 	public static JSONObject retrieveTweetData(String word) {

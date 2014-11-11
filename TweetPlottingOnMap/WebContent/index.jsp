@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,10 +22,7 @@
 </style>
 <script src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
 <script src="https://maps.googleapis.com/maps/api/js"></script>
-<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
 <script>
-	
-	var rcvReq;
 	
 	function sendRequestToServer(keyword){
 		if (window.XMLHttpRequest) {
@@ -34,15 +30,14 @@
 		} else if(window.ActiveXObject) {
 			rcvReq = new ActiveXObject("Microsoft.XMLHTTP"); 
 		}
-		rcvReq.open("GET", '/TweetMapServer', true);
+		rcvReq.open('POST', '/TweetMapServer', true);
 		rcvReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 		rcvReq.onreadystatechange = handleResponse;
-		rcvReq.send();
+		rcvReq.send(keyword);
+		return rcvReq;
 	}
 	
-	function loadMap(){
-		sendRequestToServer("input=None");
-	}
+	rcvReq = sendRequestToServer("input=NoKeyword");
 	
 	function handleResponse(){
 		if (rcvReq.readyState == 4) {
@@ -58,11 +53,10 @@
 			zoom: 3,
 			mapTypeId:google.maps.MapTypeId.ROADMAP
   		};
-		
+		var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 		
 		kw = myVar.keywords;
 		var dropdown = document.getElementById("selectKeyword");
-		
 	    for (var i = 0; i < kw.length; i++){    
 	    	var optn = document.createElement("OPTION");
 		    optn.text = kw[i];
@@ -70,10 +64,9 @@
 		    dropdown.options.add(optn);
 	    }
 		
-		var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 		var latlng = myVar.latlon;
-  		for (var i = 0; i < latlng.length; i++) {
-	    	var str = latlng[i];
+  		for (var j = 0; j < latlng.length; j++) {
+	    	var str = latlng[j];
 	    	var res = str.split(" "); 
 	    	point = new google.maps.LatLng(parseFloat(res[0]), parseFloat(res[1]));
 	    	marker = new google.maps.Marker({
@@ -86,13 +79,13 @@
 	$(document).ready(function() {
 		$("#selectKeyword").change(function() {
 	    	var srch= $("#selectKeyword").val();
-	    	sendRequestToServer("input=" + srch);
+	    	rcvReq = sendRequestToServer("input=" + srch);
 	    });
 	});
-	
+
 </script>
 </head>
-<body onload="loadMap()">
+<body>
 	<div id="panel">
 		<select id="selectKeyword">
    			<option>Choose a keyword</option>
