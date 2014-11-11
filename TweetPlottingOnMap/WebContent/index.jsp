@@ -23,19 +23,31 @@
   		};
 		var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 		var locData = [];
-		//var marker, point;
-  		$.getJSON('<%= request.getContextPath() %>' + "/TweetMapServer", function(json){
+		var marker, point;
+		/* point = new google.maps.LatLng(37.774546, -122.433523);
+    	marker = new google.maps.Marker({
+            position: point,
+            map: map
+          }); */
+  		$.getJSON( '<%= request.getContextPath() %>' + "/TweetMapServer", function(json){
+  			point = new google.maps.LatLng(parseDouble(res[0]), parseDouble(res[1]));
+	    	marker = new google.maps.Marker({
+	            position: point,
+	            map: map
+	          }); 
 	  		var latlng = json.latlon;
 	  		for (var i = 0; i < latlng.length; i++) {
 		    	var str = latlng[i];
 		    	var res = str.split(" "); 
 		    	locData.push(new google.maps.LatLng(parseDouble(res[0]), parseDouble(res[1])));
-		    	/* point = new google.maps.LatLng(parseDouble(res[0]), parseDouble(res[1]));
-		    	marker = new google.maps.Marker({
-		            position: point,
-		            map: map
-		          }); */
+		    	
 			}
+	  		
+	  		point = new google.maps.LatLng(37.774546, -122.433523);
+	    	marker = new google.maps.Marker({
+	            position: point,
+	            map: map
+	       	});
 	  		
 			var pointArray = new google.maps.MVCArray(locData); 
 			var heatmap = new google.maps.visualization.HeatmapLayer({data: pointArray});

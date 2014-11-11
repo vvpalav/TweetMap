@@ -14,15 +14,12 @@ import twitter4j.JSONArray;
 import twitter4j.JSONException;
 import twitter4j.JSONObject;
 
-import com.DBHelper;
-import com.TweetNode;
-
 public class TweetMapServer extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 	private final Logger log = Logger.getLogger(TweetMapServer.class.getName());
 	
-	public static void main(String[] args){
+	public static void main(String[] args) throws ServletException, IOException{
 		DBHelper db = new DBHelper();
 		TweetNode node = new TweetNode(2, "vinayak", "sometext", 
 				38.898556, -77.037852, new java.util.Date());
