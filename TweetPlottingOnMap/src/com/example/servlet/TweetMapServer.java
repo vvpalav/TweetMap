@@ -1,9 +1,6 @@
 package com.example.servlet;
+
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -16,43 +13,57 @@ import twitter4j.JSONObject;
 
 public class TweetMapServer extends HttpServlet {
 
-	private static final long serialVersionUID = 1L;
-	private final Logger log = Logger.getLogger(TweetMapServer.class.getName());
-	
-	public static void main(String[] args) throws ServletException, IOException{
-		DBHelper db = new DBHelper();
-		TweetNode node = new TweetNode(2, "vinayak", "sometext", 
-				38.898556, -77.037852, new java.util.Date());
-		db.insertTweetIntoDB(node);
-		for(TweetNode n : db.getAllTweetsFromDB()){
-			System.out.println(n);
-		}
-		db.close();
+	private static final long serialVersionUID = 102831973239L;
+
+	public static void main(String[] args){
+		JSONObject json = retrieveTweetData(null);
+		System.out.println(json);
 	}
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
+		DBHelper db = new DBHelper();
+		String word = req.getParameter("input");
+		if (word != null && word.equals("None"))
+			word = null;
+		JSONObject json = TweetMapServer.retrieveTweetData(word);
+		resp.setContentType("text/json");
+		resp.getWriter().println(json.toString());
+		resp.flushBuffer();
 		super.doGet(req, resp);
-        log.log(Level.SEVERE, "Got the doGet Request");
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		String word = req.getParameter("input");
+		if (word != null && word.equals("None"))
+			word = null;
+		JSONObject json = TweetMapServer.retrieveTweetData(word);
+		resp.setContentType("text/json");
+		resp.getWriter().println(json.toString());
+		resp.flushBuffer();
+		super.doPost(req, resp);
+	}
+
+	public static JSONObject retrieveTweetData(String word) {
+		JSONObject json = new JSONObject();
+		JSONArray array = new JSONArray();
+		JSONArray keywords = new JSONArray();
+		DBHelper db = new DBHelper();
 		try {
-			JSONArray array = new JSONArray();
-			DBHelper db = new DBHelper();
-			List<TweetNode> list = db.getAllTweetsFromDB();
-			for (TweetNode node : list) {
+			for (TweetNode node : db.getAllTweetsFromDB(word)) {
 				array.put(node.getValue());
 			}
-			JSONObject json = new JSONObject();
+			for (String str : db.getListOfKeywords()) {
+				keywords.put(str);
+			}
 			json.put("latlon", array);
-			resp.setContentType("text/json");
-			PrintWriter print = resp.getWriter();
-			print.println(json.toString());
-			print.flush();
-			print.close();
-			resp.flushBuffer();
-			db.close();
+			json.put("keywords", keywords);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+		return json;
 	}
 }

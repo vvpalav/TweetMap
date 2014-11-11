@@ -53,7 +53,7 @@ public final class TweetReader implements StatusListener {
 
 	@Override
 	public void onStatus(Status status) {
-		if(status == null || status.getGeoLocation() == null) return;
+		if(status == null || status.getGeoLocation() == null ) return;
 		
 		System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText());
 		double latitude = status.getGeoLocation().getLatitude();
@@ -63,7 +63,7 @@ public final class TweetReader implements StatusListener {
 		String user = status.getUser().getScreenName();
 		String text = status.getText();
 		TweetNode node = new TweetNode(id, user, text, latitude, longitude, timestamp);
-		db.insertTweetIntoDB(node);
+		if(text.contains("@"))	db.insertTweetIntoDB(node);
 	}
 
 	@Override

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,56 +10,94 @@
         margin: 0px;
         padding: 0px
       }
+      #panel {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        margin-left: -180px;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+      }
 </style>
 <script src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
 <script src="https://maps.googleapis.com/maps/api/js"></script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
 <script>
-
-	function initialize() {
+	
+	var rcvReq;
+	
+	function sendRequestToServer(keyword){
+		if (window.XMLHttpRequest) {
+			rcvReq = new XMLHttpRequest();
+		} else if(window.ActiveXObject) {
+			rcvReq = new ActiveXObject("Microsoft.XMLHTTP"); 
+		}
+		rcvReq.open("GET", '/TweetMapServer', true);
+		rcvReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		rcvReq.onreadystatechange = handleResponse;
+		rcvReq.send(keyword);
+	}
+	
+	function loadMap(){
+		sendRequestToServer("input=None");
+	}
+	
+	function handleResponse(){
+		if (rcvReq.readyState == 4) {
+			alert(rcvReq.responseText);
+			initialize(JSON.parse(rcvReq.responseText));
+			google.maps.event.addDomListener(window, 'load', initialize);
+		}
+	}
+	
+	function initialize(myVar) {
 		var mapOptions = {
 			center: new google.maps.LatLng(37.774546, -122.433523),
 			zoom: 3,
-			mapTypeId:google.maps.MapTypeId.TERRAIN
+			mapTypeId:google.maps.MapTypeId.ROADMAP
   		};
+		
+		
+		kw = myVar.keywords;
+		var dropdown = document.getElementById("selectKeyword");
+		
+	    for (var i = 0; i < kw.length; i++){    
+	    	var optn = document.createElement("OPTION");
+		    optn.text = kw[i];
+		    optn.value = kw[i];
+		    dropdown.options.add(optn);
+	    }
+		
 		var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-		var locData = [];
-		var marker, point;
-		/* point = new google.maps.LatLng(37.774546, -122.433523);
-    	marker = new google.maps.Marker({
-            position: point,
-            map: map
-          }); */
-  		$.getJSON( '<%= request.getContextPath() %>' + "/TweetMapServer", function(json){
-  			point = new google.maps.LatLng(parseDouble(res[0]), parseDouble(res[1]));
+		var latlng = myVar.latlon;
+  		for (var i = 0; i < latlng.length; i++) {
+	    	var str = latlng[i];
+	    	var res = str.split(" "); 
+	    	point = new google.maps.LatLng(parseFloat(res[0]), parseFloat(res[1]));
 	    	marker = new google.maps.Marker({
 	            position: point,
 	            map: map
-	          }); 
-	  		var latlng = json.latlon;
-	  		for (var i = 0; i < latlng.length; i++) {
-		    	var str = latlng[i];
-		    	var res = str.split(" "); 
-		    	locData.push(new google.maps.LatLng(parseDouble(res[0]), parseDouble(res[1])));
-		    	
-			}
-	  		
-	  		point = new google.maps.LatLng(37.774546, -122.433523);
-	    	marker = new google.maps.Marker({
-	            position: point,
-	            map: map
-	       	});
-	  		
-			var pointArray = new google.maps.MVCArray(locData); 
-			var heatmap = new google.maps.visualization.HeatmapLayer({data: pointArray});
-			heatmap.setMap(map);
-		}); 
+	       	}); 
+		}
 	}
 	
-	google.maps.event.addDomListener(window, 'load', initialize);
+	$(document).ready(function() {
+		$("#selectKeyword").change(function() {
+	    	var srch= $("#selectKeyword").val();
+	    	sendRequestToServer("input=" + srch);
+	    });
+	});
+	
 </script>
 </head>
-<body>
+<body onload="loadMap()">
+	<div id="panel">
+		<select id="selectKeyword">
+   			<option>Choose a keyword</option>
+		</select>
+	</div>
 	<div id="map-canvas"></div>
 </body>
 </html>

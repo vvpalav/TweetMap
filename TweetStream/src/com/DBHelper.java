@@ -21,8 +21,12 @@ public class DBHelper {
 		TweetNode node = new TweetNode(2, "vinayak", "sometext", 
 				38.898556, -77.037852, new java.util.Date());
 		db.insertTweetIntoDB(node);
-		for(TweetNode n : db.getAllTweetsFromDB()){
+		for(TweetNode n : db.getAllTweetsFromDB("")){
 			System.out.println(n);
+		}
+		
+		for(String str : db.getListOfKeywords()){
+			System.out.println(str);
 		}
 		db.close();
 	}
@@ -34,9 +38,12 @@ public class DBHelper {
 			conn = (Connection) DriverManager.getConnection(dbURL, dbUser,
 					dbPassword);
 			System.out.println("Connected to database");
-		} catch (SQLException | ClassNotFoundException e) {
+		} catch (SQLException  e) {
 			System.out.println("Cannot connect the database!");
 			e.printStackTrace();
+		} catch (ClassNotFoundException ex){
+			System.out.println("Cannot connect the database!");
+			ex.printStackTrace();
 		}
 	}
 
@@ -57,9 +64,12 @@ public class DBHelper {
 		}
 	}
 
-	public List<TweetNode> getAllTweetsFromDB() {
+	public List<TweetNode> getAllTweetsFromDB(String word) {
 		List<TweetNode> list = new LinkedList<TweetNode>();
 		String SQL = "select * from tweets";
+		if(word != null && word.length() > 0){
+			SQL += " where text like '%@" + word + "%'";
+		}
 		try {
 			ResultSet rs = conn.createStatement().executeQuery(SQL);
 			while (rs.next()) {
@@ -106,6 +116,32 @@ public class DBHelper {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public List<String> getListOfKeywords(){
+		List<String> list = new LinkedList<String>();
+		String SQL = "Select text from tweets where text like '%@%'";
+		ResultSet rs;
+		try {
+			rs = conn.createStatement().executeQuery(SQL);
+			while(rs.next()){
+				String word = rs.getString(1);
+				if(word.contains("@")){
+					word = word.substring(word.indexOf("@")+1);
+					int index = word.indexOf(" ");
+					if(index > 0){
+						word = word.substring(0, index);
+					} else {
+						word = word.substring(0);	
+					}
+					if(!word.contains(" ")) list.add(word);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return list;
 	}
 	
 	public int getTweetCount() {
