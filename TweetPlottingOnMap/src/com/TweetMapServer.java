@@ -1,3 +1,4 @@
+package com;
 import java.io.IOException;
 import java.util.List;
 
@@ -17,6 +18,17 @@ public class TweetMapServer extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
+	public static void main(String[] args){
+		DBHelper db = new DBHelper();
+		TweetNode node = new TweetNode(2, "vinayak", "sometext", 
+				38.898556, -77.037852, new java.util.Date());
+		db.insertTweetIntoDB(node);
+		for(TweetNode n : db.getAllTweetsFromDB()){
+			System.out.println(n);
+		}
+		db.close();
+	}
+	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -30,7 +42,7 @@ public class TweetMapServer extends HttpServlet {
 			}
 			JSONObject json = new JSONObject();
 			json.put("latlon", array);
-			resp.setContentType("text/html");
+			resp.setContentType("text/json");
 			resp.getWriter().println(json.toString());
 			resp.flushBuffer();
 			db.close();
