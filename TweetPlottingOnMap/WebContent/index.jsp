@@ -37,7 +37,7 @@
 		rcvReq.open("GET", '/TweetMapServer', true);
 		rcvReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 		rcvReq.onreadystatechange = handleResponse;
-		rcvReq.send(keyword);
+		rcvReq.send();
 	}
 	
 	function loadMap(){

@@ -3,6 +3,9 @@ package com;
 import java.util.Date;
 import java.util.LinkedList;
 
+import com.example.utilities.DBHelper;
+import com.example.utilities.TweetNode;
+
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;

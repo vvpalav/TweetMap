@@ -1,4 +1,4 @@
-package com.example.servlet;
+package com.example.utilities;
 
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -16,7 +16,7 @@ public class DBHelper {
 	private final String dbPassword = "edge_123";
 	private Connection conn;
 
-	/*public static void main(String[] args){
+	public static void main(String[] args){
 		DBHelper db = new DBHelper();
 		TweetNode node = new TweetNode(2, "vinayak", "sometext", 
 				38.898556, -77.037852, new java.util.Date());
@@ -29,7 +29,7 @@ public class DBHelper {
 			System.out.println(str);
 		}
 		db.close();
-	}*/
+	}
 	
 	public DBHelper() {
 		try {

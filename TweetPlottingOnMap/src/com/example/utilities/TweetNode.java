@@ -1,4 +1,4 @@
-package com.example.servlet;
+package com.example.utilities;
 
 import java.util.Date;
 

@@ -7,23 +7,20 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.example.utilities.DBHelper;
+import com.example.utilities.TweetNode;
+
 import twitter4j.JSONArray;
 import twitter4j.JSONException;
 import twitter4j.JSONObject;
 
 public class TweetMapServer extends HttpServlet {
 
-	private static final long serialVersionUID = 102831973239L;
-
-	public static void main(String[] args){
-		JSONObject json = retrieveTweetData(null);
-		System.out.println(json);
-	}
+	private static final long serialVersionUID = 10283173239L;
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		DBHelper db = new DBHelper();
 		String word = req.getParameter("input");
 		if (word != null && word.equals("None"))
 			word = null;
