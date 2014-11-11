@@ -2,9 +2,6 @@ package com;
 
 import java.util.Date;
 
-import twitter4j.JSONException;
-import twitter4j.JSONObject;
-
 public class TweetNode {
 
 	private long id;
@@ -53,17 +50,7 @@ public class TweetNode {
 				+ " Timestamp: " + timestamp.toString();
 	}
 
-	public JSONObject toJSON() {
-		JSONObject json = new JSONObject();
-		try {
-			json.put("latitude", getLatitude());
-			json.put("longitude", getLongitude());
-			json.put("timestamp", getTimestamp().toString());
-			json.put("id", getId());
-		} catch (JSONException e) {
-			System.out.println("Failed to convert TweetNode to JSONObject");
-			e.printStackTrace();
-		}
-		return json;
+	public String getValue() {
+		return latitude + " " + longitude;
 	}
 }

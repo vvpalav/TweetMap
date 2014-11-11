@@ -1,80 +1,45 @@
-<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
-<%@ page import="com.amazonaws.*" %>
-<%@ page import="com.amazonaws.auth.*" %>
-<%@ page import="com.amazonaws.services.ec2.*" %>
-<%@ page import="com.amazonaws.services.ec2.model.*" %>
-<%@ page import="com.amazonaws.services.s3.*" %>
-<%@ page import="com.amazonaws.services.s3.model.*" %>
-<%@ page import="com.amazonaws.services.dynamodbv2.*" %>
-<%@ page import="com.amazonaws.services.dynamodbv2.model.*" %>
-
-<%! // Share the client objects across threads to
-    // avoid creating new clients for each web request
-    private AmazonEC2         ec2;
-    private AmazonS3           s3;
-    private AmazonDynamoDB dynamo;
- %>
-
-<%
-    /*
-     * AWS Elastic Beanstalk checks your application's health by periodically
-     * sending an HTTP HEAD request to a resource in your application. By
-     * default, this is the root or default resource in your application,
-     * but can be configured for each environment.
-     *
-     * Here, we report success as long as the app server is up, but skip
-     * generating the whole page since this is a HEAD request only. You
-     * can employ more sophisticated health checks in your application.
-     */
-    if (request.getMethod().equals("HEAD")) return;
-%>
-
-<%
-    if (ec2 == null) {
-        AWSCredentialsProvider credentialsProvider = new ClasspathPropertiesFileCredentialsProvider();
-        ec2    = new AmazonEC2Client(credentialsProvider);
-        s3     = new AmazonS3Client(credentialsProvider);
-        dynamo = new AmazonDynamoDBClient(credentialsProvider);
-    }
-%>
-
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-    <title>Hello AWS Web World!</title>
-    <link rel="stylesheet" href="styles/styles.css" type="text/css" media="screen">
+<meta charset="utf-8">
+<title>Heat Maps</title>
+<style>
+       #map_canvas {
+        width: 500px;
+        height: 400px;
+      }
+</style>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=visualization"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+<script>
+
+	var map, heatmap, pointArray;
+	var locData = [];
+	function initialize() {
+		var mapOptions = {
+			center: new google.maps.LatLng(37.774546, -122.433523),
+			zoom: 3,
+    		mapTypeId: google.maps.MapTypeId.SATELLITE
+  		};
+		
+  		$.getJSON('<%= request.getContextPath() %>' + "/TweetMapServer/", function(json){
+	  		var latlng = json.latlon;
+	  		for (var i = 0; i < latlng.length; i++) {
+		    	var str = latlng[i];
+		    	var res = str.split(" "); 
+		    	locData.push(new google.maps.LatLng(parseFloat(res[0]), parseFloat(res[1])));
+			}
+	  		map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+			pointArray = new google.maps.MVCArray(locData); 
+			heatmap = new google.maps.visualization.HeatmapLayer({data: pointArray});
+			heatmap.setMap(map); 
+		});
+	}
+	
+	google.maps.event.addDomListener(window, 'load', initialize);
+</script>
 </head>
 <body>
-    <div id="content" class="container">
-        <div class="section grid grid5 s3">
-            <h2>Amazon S3 Buckets:</h2>
-            <ul>
-            <% for (Bucket bucket : s3.listBuckets()) { %>
-               <li> <%= bucket.getName() %> </li>
-            <% } %>
-            </ul>
-        </div>
-
-        <div class="section grid grid5 sdb">
-            <h2>Amazon DynamoDB Tables:</h2>
-            <ul>
-            <% for (String tableName : dynamo.listTables().getTableNames()) { %>
-               <li> <%= tableName %></li>
-            <% } %>
-            </ul>
-        </div>
-
-        <div class="section grid grid5 gridlast ec2">
-            <h2>Amazon EC2 Instances:</h2>
-            <ul>
-            <% for (Reservation reservation : ec2.describeInstances().getReservations()) { %>
-                <% for (Instance instance : reservation.getInstances()) { %>
-                   <li> <%= instance.getInstanceId() %></li>
-                <% } %>
-            <% } %>
-            </ul>
-        </div>
-    </div>
+	<div id="map-canvas"></div>
 </body>
 </html>
