@@ -120,15 +120,17 @@
 		}
 	}
 	
-	function handleTweetsResponseForGivenUser(){
+	
+	function handleTweetsResponseForGivenUser() {
 		if (newReq.readyState == 4) {
 			var json = JSON.parse(newReq.responseText);
-			if(json.error == "success"){
+			if (json.error == "success") {
 				initialize(json);
 				google.maps.event.addDomListener(window, 'load', initialize);
-			} else if ( json.error == "failed"){
-				alert("Failed to pull tweets for " + document.getElementById('username').value);
-				loadDefaultMap();
+			} else if (json.error == "failed") {
+				alert("Failed to pull tweets for "
+						+ document.getElementById('username').value + "\n"
+						+ " Message: " + json.msg);
 			}
 		}
 	}

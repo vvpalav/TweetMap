@@ -49,7 +49,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 					.setOAuthConsumerSecret(consumerSecret)
 					.setOAuthAccessToken(accessKey)
 					.setOAuthAccessTokenSecret(tokenPrivate);
-
+			
 			String name = req.getParameter("username");
 			Twitter twitter = new TwitterFactory(cb.build()).getInstance();
 
@@ -67,18 +67,31 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 					}
 				}
 			} while (((query = result.nextQuery()) != null)
-					&& (array.length() < 30));
+					&& (array.length() < 20));
 
 			if(array.length() > 0){
 				json.put("latlon", array);
 				json.put("error", "success");
 			} else {
 				json.put("error", "failed");
+				json.put("msg", "Twitter returned null resultset");
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
+			try {
+				json.put("error", "failed");
+				json.put("msg", e.getMessage());
+			} catch (JSONException e1) {
+				e1.printStackTrace();
+			}
 		} catch (TwitterException e) {
 			e.printStackTrace();
+			try {
+				json.put("error", "failed");
+				json.put("msg", e.getErrorMessage());
+			} catch (JSONException e1) {
+				e1.printStackTrace();
+			}
 		} finally {
 			resp.setContentType("text/json");
 			resp.getWriter().println(json.toString());

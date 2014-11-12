@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -35,8 +36,12 @@ public class TweetMapServerForKeyword extends HttpServlet {
 			JSONObject json = new JSONObject();
 			DBHelper db = new DBHelper();
 			JSONArray keywords = new JSONArray();
+			HashSet<String> set = new HashSet<String>();
 			for (String str : db.getListOfKeywords()) {
-				keywords.put(str);
+				if(!set.contains(str)){
+					set.add(str);
+					keywords.put(str);
+				}
 			}
 			json.put("keywords", keywords);
 			resp.setContentType("text/json");
