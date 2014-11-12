@@ -10,11 +10,11 @@ import twitter4j.JSONArray;
 import twitter4j.JSONException;
 import twitter4j.JSONObject;
 
-public class TweetMapServer extends HttpServlet {
+public class TweetMapServerForTweets extends HttpServlet {
 
 	private static final long serialVersionUID = 10283173239L;
 
-	public TweetMapServer(){
+	public TweetMapServerForTweets(){
 		super();
 	}
 	
@@ -32,7 +32,6 @@ public class TweetMapServer extends HttpServlet {
 			word = null;
 		JSONObject json = retrieveTweetData(word);
 		resp.setContentType("text/json");
-		resp.setContentType("text/plaintext");
 		PrintWriter out = resp.getWriter();
 		out.println(json.toString());
 		out.flush(); out.close();
@@ -41,17 +40,12 @@ public class TweetMapServer extends HttpServlet {
 	public static JSONObject retrieveTweetData(String word) {
 		JSONObject json = new JSONObject();
 		JSONArray array = new JSONArray();
-		JSONArray keywords = new JSONArray();
 		DBHelper db = new DBHelper();
 		try {
 			for (TweetNode node : db.getAllTweetsFromDB(word)) {
 				array.put(node.getValue());
 			}
-			for (String str : db.getListOfKeywords()) {
-				keywords.put(str);
-			}
 			json.put("latlon", array);
-			json.put("keywords", keywords);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}

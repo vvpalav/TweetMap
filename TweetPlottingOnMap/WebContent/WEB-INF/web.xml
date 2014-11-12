@@ -11,14 +11,25 @@
   </welcome-file-list>
     
   <servlet>
-  	  <display-name>TweetMapServer</display-name>
-      <servlet-name>TweetMapServer</servlet-name>
-      <servlet-class>TweetMapServer</servlet-class>
+  	  <display-name>TweetMapServerForTweets</display-name>
+      <servlet-name>TweetMapServerForTweets</servlet-name>
+      <servlet-class>TweetMapServerForTweets</servlet-class>
   </servlet>
   
   <servlet-mapping>
-      <servlet-name>TweetMapServer</servlet-name>
-      <url-pattern>/TweetMapServer</url-pattern>
+      <servlet-name>TweetMapServerForTweets</servlet-name>
+      <url-pattern>/TweetMapServerForTweets</url-pattern>
+  </servlet-mapping>
+  
+  <servlet>
+  	  <display-name>TweetMapServerForKeyword</display-name>
+      <servlet-name>TweetMapServerForKeyword</servlet-name>
+      <servlet-class>TweetMapServerForKeyword</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+      <servlet-name>TweetMapServerForKeyword</servlet-name>
+      <url-pattern>/TweetMapServerForKeyword</url-pattern>
   </servlet-mapping>
   
 </web-app>

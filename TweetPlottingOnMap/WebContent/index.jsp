@@ -23,25 +23,57 @@
 <script src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
 <script src="https://maps.googleapis.com/maps/api/js"></script>
 <script>
+
+	var req, rcvReq;
 	
-	function sendRequestToServer(keyword){
+	function loadMap(){
+		req = retrieveKeywords();
+		rcvReq = retrieveTweets("input=NoKeyword");
+	}
+	
+	function retrieveKeywords(){
+		if (window.XMLHttpRequest) {
+			req = new XMLHttpRequest();
+		} else if(window.ActiveXObject) {
+			req = new ActiveXObject("Microsoft.XMLHTTP"); 
+		}
+		req.open('POST', '/TweetMapServerForKeyword', true);
+		req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		req.onreadystatechange = handleKeywordsResponse;
+		req.send();
+		return req;
+	}
+	
+	function handleKeywordsResponse(){
+		if (req.readyState == 4) {
+			alert(req.responseText);
+			var values = JSON.parse(req.responseText);
+			var dropdown = document.getElementById("selectKeyword");
+			kw = values.keywords;
+		    for (var i = 0; i < kw.length; i++){    
+		    	var optn = document.createElement("OPTION");
+			    optn.text = kw[i];
+			    optn.value = kw[i];
+			    dropdown.options.add(optn);
+		    }
+		}
+	}
+	
+	function retrieveTweets(keyword){
 		if (window.XMLHttpRequest) {
 			rcvReq = new XMLHttpRequest();
 		} else if(window.ActiveXObject) {
 			rcvReq = new ActiveXObject("Microsoft.XMLHTTP"); 
 		}
-		rcvReq.open('POST', '/TweetMapServer', true);
+		rcvReq.open('POST', '/TweetMapServerForTweets', true);
 		rcvReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		rcvReq.onreadystatechange = handleResponse;
+		rcvReq.onreadystatechange = handleTweetsResponse;
 		rcvReq.send(keyword);
 		return rcvReq;
 	}
 	
-	rcvReq = sendRequestToServer("input=NoKeyword");
-	
-	function handleResponse(){
+	function handleTweetsResponse(){
 		if (rcvReq.readyState == 4) {
-			//alert(rcvReq.responseText);
 			initialize(JSON.parse(rcvReq.responseText));
 			google.maps.event.addDomListener(window, 'load', initialize);
 		}
@@ -49,20 +81,11 @@
 	
 	function initialize(myVar) {
 		var mapOptions = {
-			center: new google.maps.LatLng(37.774546, -122.433523),
-			zoom: 3,
+			center: new google.maps.LatLng(20,-10),
+			zoom: 2,
 			mapTypeId:google.maps.MapTypeId.ROADMAP
   		};
 		var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-		var dropdown = document.getElementById("selectKeyword");
-		kw = myVar.keywords;
-	    for (var i = 0; i < kw.length; i++){    
-	    	var optn = document.createElement("OPTION");
-		    optn.text = kw[i];
-		    optn.value = kw[i];
-		    dropdown.options.add(optn);
-	    }
-		
 		var latlng = myVar.latlon;
   		for (var j = 0; j < latlng.length; j++) {
 	    	var str = latlng[j];
@@ -79,22 +102,15 @@
 		var elem = document.getElementById('selectKeyword');
 		var strUser = elem.options[elem.selectedIndex].value;
 		if(strUser == "Choose a keyword") {
-			alert("Please select twitter id");
+			rcvReq = retrieveTweets("input=NoKeyword");
 		} else {
-			emptyComboBox(elem);
-			rcvReq = sendRequestToServer("input=" + strUser);
+			rcvReq = retrieveTweets("input=" + strUser);
 		}
-	}
-	
-	function emptyComboBox(comboBox) {
-    	while(comboBox.options.length > 1){                
-    		comboBox.remove(1);
-    	}
 	}
 	
 </script>
 </head>
-<body>
+<body onload="loadMap()">
 	<div id="panel">
 		<button onclick="getTweets()">Get Tweets</button>
 		<select id="selectKeyword">
