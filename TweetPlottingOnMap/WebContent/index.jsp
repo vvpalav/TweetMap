@@ -46,7 +46,6 @@
 	
 	function handleKeywordsResponse(){
 		if (req.readyState == 4) {
-			alert(req.responseText);
 			var values = JSON.parse(req.responseText);
 			var dropdown = document.getElementById("selectKeyword");
 			kw = values.keywords;
@@ -101,7 +100,7 @@
 	function getTweets(){
 		var elem = document.getElementById('selectKeyword');
 		var strUser = elem.options[elem.selectedIndex].value;
-		if(strUser == "Choose a keyword") {
+		if(strUser == "All Tweets") {
 			rcvReq = retrieveTweets("input=NoKeyword");
 		} else {
 			rcvReq = retrieveTweets("input=" + strUser);
@@ -114,7 +113,7 @@
 	<div id="panel">
 		<button onclick="getTweets()">Get Tweets</button>
 		<select id="selectKeyword">
-   			<option>Choose a keyword</option>
+   			<option>All Tweets</option>
 		</select>
 	</div>
 	<div id="map-canvas"></div>
