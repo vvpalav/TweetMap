@@ -26,7 +26,7 @@
 
 	var req, rcvReq;
 	
-	function loadMap(){
+	function loadDefaultMap(){
 		req = retrieveKeywords();
 		rcvReq = retrieveTweets("input=NoKeyword");
 	}
@@ -97,24 +97,59 @@
 		}
 	}
 	
-	function getTweets(){
-		var elem = document.getElementById('selectKeyword');
-		var strUser = elem.options[elem.selectedIndex].value;
-		if(strUser == "All Tweets") {
-			rcvReq = retrieveTweets("input=NoKeyword");
+	function getTweets() {
+		var txt = document.getElementById('username').value;
+		if (txt.length > 0) {
+			if (window.XMLHttpRequest) {
+				newReq = new XMLHttpRequest();
+			} else if(window.ActiveXObject) {
+				newReq = new ActiveXObject("Microsoft.XMLHTTP"); 
+			}
+			newReq.open('POST', '/TwitterReaderForParticularUser', true);
+			newReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			newReq.onreadystatechange = handleTweetsResponseForGivenUser;
+			newReq.send("username=" + txt);
 		} else {
-			rcvReq = retrieveTweets("input=" + strUser);
+			var elem = document.getElementById('selectKeyword');
+			var strUser = elem.options[elem.selectedIndex].value;
+			if (strUser == "All Tweets") {
+				rcvReq = retrieveTweets("input=NoKeyword");
+			} else {
+				rcvReq = retrieveTweets("input=" + strUser);
+			}
 		}
 	}
 	
+	function handleTweetsResponseForGivenUser(){
+		if (newReq.readyState == 4) {
+			var json = JSON.parse(newReq.responseText);
+			if(json.error == "success"){
+				initialize(json);
+				google.maps.event.addDomListener(window, 'load', initialize);
+			} else if ( json.error == "failed"){
+				alert("Failed to pull tweets for " + document.getElementById('username').value);
+				loadDefaultMap();
+			}
+		}
+	}
+
+	function processTextInput() {
+		var txt = document.getElementById('username').value;
+		if (txt.length > 0) {
+			document.getElementById('selectKeyword').disabled = true;
+		} else if (txt.length == 0) {
+			document.getElementById('selectKeyword').disabled = false;
+		}
+	}
 </script>
 </head>
-<body onload="loadMap()">
+<body onload="loadDefaultMap()">
 	<div id="panel">
 		<button onclick="getTweets()">Get Tweets</button>
 		<select id="selectKeyword">
    			<option>All Tweets</option>
 		</select>
+		<input type="text" id="username" oninput="processTextInput()"/>
 	</div>
 	<div id="map-canvas"></div>
 </body>

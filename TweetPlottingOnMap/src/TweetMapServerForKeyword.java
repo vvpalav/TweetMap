@@ -39,7 +39,7 @@ public class TweetMapServerForKeyword extends HttpServlet {
 				keywords.put(str);
 			}
 			json.put("keywords", keywords);
-			resp.setContentType("text/plaintext");
+			resp.setContentType("text/json");
 			PrintWriter out = resp.getWriter();
 			out.println(json.toString());
 			out.flush();

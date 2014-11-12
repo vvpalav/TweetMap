@@ -1,5 +1,14 @@
+import java.io.IOException;
 import java.util.List;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import twitter4j.JSONArray;
+import twitter4j.JSONException;
+import twitter4j.JSONObject;
 import twitter4j.Query;
 import twitter4j.QueryResult;
 import twitter4j.Status;
@@ -8,40 +17,73 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
-public class TwitterReaderForParticularUser {
+public class TwitterReaderForParticularUser extends HttpServlet {
 
-	private final ConfigurationBuilder cb;
-	private final String consumerKey = "x5R4hzLsACZXQjGsK0u49riNi";
-	private final String consumerSecret = "yfl9C3O9mhsm1BinTjD0NfoAy5idZAhVVUbi6xb2RWexiHzgYw";
-	private final String accessKey = "2869307315-TAMtDAoMzhiUvgaLjxejTuEyTjvl2XcXaYw4L3X";
-	private final String tokenPrivate = "gpvuKSifiNZnwk1egNtVOumZmpNNk6MVXwOMdTL3lPP2X";
+	private static final long serialVersionUID = -6128144911835523415L;
+	private static ConfigurationBuilder cb;
+	private final static String consumerKey = "x5R4hzLsACZXQjGsK0u49riNi";
+	private final static String consumerSecret = "yfl9C3O9mhsm1BinTjD0NfoAy5idZAhVVUbi6xb2RWexiHzgYw";
+	private final static String accessKey = "2869307315-TAMtDAoMzhiUvgaLjxejTuEyTjvl2XcXaYw4L3X";
+	private final static String tokenPrivate = "gpvuKSifiNZnwk1egNtVOumZmpNNk6MVXwOMdTL3lPP2X";
 
-	public static void main(String[] args) throws TwitterException {
-
-		// Initiate Twitter Reader
-		TwitterReaderForParticularUser tb = new TwitterReaderForParticularUser();
-		TwitterFactory tf = new TwitterFactory(tb.cb.build());
-		Twitter twitter = tf.getInstance();
-
-		// Fetch Tweets for User
-		System.out.println("Fetching Tweets for Narendra Modi");
-		Query query = new Query("narendramodi");
-		QueryResult result;
-		do {
-			result = twitter.search(query);
-			List<Status> tweets = result.getTweets();
-			for (Status tweet : tweets) {
-				System.out.println("@" + tweet.getUser().getScreenName()
-						+ " - " + tweet.getText());
-			}
-		} while ((query = result.nextQuery()) != null);
+	public static void main(String[] args) throws ServletException, IOException {
+		new TwitterReaderForParticularUser().doPost(null, null);
 	}
 
-	public TwitterReaderForParticularUser() {
-		this.cb = new ConfigurationBuilder();
-		this.cb.setDebugEnabled(true).setOAuthConsumerKey(consumerKey)
-				.setOAuthConsumerSecret(consumerSecret)
-				.setOAuthAccessToken(accessKey)
-				.setOAuthAccessTokenSecret(tokenPrivate);
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		doPost(req, resp);
+	}
+
+	@Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+
+		JSONObject json = new JSONObject();
+		JSONArray array = new JSONArray();
+
+		try {
+			cb = new ConfigurationBuilder();
+			cb.setDebugEnabled(true).setOAuthConsumerKey(consumerKey)
+					.setOAuthConsumerSecret(consumerSecret)
+					.setOAuthAccessToken(accessKey)
+					.setOAuthAccessTokenSecret(tokenPrivate);
+
+			String name = req.getParameter("username");
+			Twitter twitter = new TwitterFactory(cb.build()).getInstance();
+
+			Query query = new Query(name);
+			QueryResult result = null;
+			do {
+				result = twitter.search(query);
+				if(result == null) break;
+				List<Status> tweets = result.getTweets();
+				for (Status tweet : tweets) {
+					if (tweet.getGeoLocation() != null) {
+						System.out.println(tweet.getText());
+						array.put(tweet.getGeoLocation().getLatitude() + " "
+								+ tweet.getGeoLocation().getLongitude());
+					}
+				}
+			} while (((query = result.nextQuery()) != null)
+					&& (array.length() < 30));
+
+			if(array.length() > 0){
+				json.put("latlon", array);
+				json.put("error", "success");
+			} else {
+				json.put("error", "failed");
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		} catch (TwitterException e) {
+			e.printStackTrace();
+		} finally {
+			resp.setContentType("text/json");
+			resp.getWriter().println(json.toString());
+			resp.getWriter().flush();
+			resp.getWriter().close();
+		}
 	}
 }

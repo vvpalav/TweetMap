@@ -32,4 +32,15 @@
       <url-pattern>/TweetMapServerForKeyword</url-pattern>
   </servlet-mapping>
   
+  <servlet>
+  	  <display-name>TwitterReaderForParticularUser</display-name>
+      <servlet-name>TwitterReaderForParticularUser</servlet-name>
+      <servlet-class>TwitterReaderForParticularUser</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+      <servlet-name>TwitterReaderForParticularUser</servlet-name>
+      <url-pattern>/TwitterReaderForParticularUser</url-pattern>
+  </servlet-mapping>
+  
 </web-app>
