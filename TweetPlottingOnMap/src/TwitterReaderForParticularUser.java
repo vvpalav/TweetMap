@@ -68,7 +68,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 				}
 			} while (((query = result.nextQuery()) != null)
 					&& (array.length() < 20));
-
+			
 			if(array.length() > 0){
 				json.put("latlon", array);
 				json.put("error", "success");
