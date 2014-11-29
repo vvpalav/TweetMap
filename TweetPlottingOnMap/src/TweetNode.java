@@ -48,7 +48,7 @@ public class TweetNode {
 				+ " Timestamp: " + timestamp.toString();
 	}
 
-	public String getValue() {
-		return latitude + " " + longitude;
+	public String getStringValue() {
+		return latitude + " " + longitude + " " + text;
 	}
 }

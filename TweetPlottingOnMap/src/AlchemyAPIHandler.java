@@ -6,19 +6,38 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.List;
 
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
 
 public class AlchemyAPIHandler {
 
-
-
-	public static void main(String[] args) {
-		AlchemyAPIHandler alchemy = new AlchemyAPIHandler();
-		alchemy.performSentimentAnalysisOnTweet("vinayak is a bad boy");
+	private TwipMapSQSHandler sqs;
+	private String queueUrl;
+	
+	AlchemyAPIHandler(TwipMapSQSHandler sqs){
+		this.sqs = sqs;
+		this.queueUrl = sqs.getQueueURL(Configuration.queueName);
 	}
-
+	
+	public void processSQSMessage() {
+		while (true) {
+			try {
+				Thread.sleep(4000);
+				List<Message> list = sqs.getMessagesFromQueue(this.queueUrl);
+				if (list != null) {
+					for (Message m : list) {
+						performSentimentAnalysisOnTweet(m.getBody());
+					}
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public JSONObject performSentimentAnalysisOnTweet(String text) {
 		try {
 			String data = makeParamString(text);

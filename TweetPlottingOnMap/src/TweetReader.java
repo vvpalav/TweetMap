@@ -15,6 +15,7 @@ public final class TweetReader implements StatusListener {
 	private final DBHelper db;
 	private final ConfigurationBuilder cb;
 	private LinkedList<Long> list;
+	private TwipMapSQSHandler sqs; 
 
 	public static void main(String[] args) throws TwitterException, InterruptedException {
 		TweetReader reader = new TweetReader();
@@ -37,7 +38,8 @@ public final class TweetReader implements StatusListener {
 
 	public TweetReader() {
 		this.list = new LinkedList<Long>();
-		this.db = new DBHelper();
+		this.sqs = TwipMapSQSHandler.initializeTwipMapSQSHandler(Configuration.queueRegion);
+		this.db = new DBHelper(this.sqs);
 		this.cb = new ConfigurationBuilder();
 		this.cb.setDebugEnabled(true).setOAuthConsumerKey(Configuration.twitterConsumerKey)
 		.setOAuthConsumerSecret(Configuration.twitterConsumerSecret)

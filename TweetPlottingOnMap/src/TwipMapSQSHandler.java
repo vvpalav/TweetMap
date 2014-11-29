@@ -11,6 +11,7 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
+import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
@@ -69,6 +70,14 @@ public class TwipMapSQSHandler {
 			queueList.add(myQueueName);
 			CreateQueueRequest request = new CreateQueueRequest(myQueueName);
 			return sqsHandler.createQueue(request).getQueueUrl();
+		}
+		return null;
+	}
+	
+	public String getQueueURL(String queueName){
+		if (!queueList.contains(queueName)) {
+			GetQueueUrlRequest url = new GetQueueUrlRequest(queueName);
+			return sqsHandler.getQueueUrl(url).getQueueUrl();
 		}
 		return null;
 	}
