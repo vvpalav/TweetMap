@@ -21,10 +21,6 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 
 	private static final long serialVersionUID = -6128144911835523415L;
 	private static ConfigurationBuilder cb;
-	private final static String consumerKey = "x5R4hzLsACZXQjGsK0u49riNi";
-	private final static String consumerSecret = "yfl9C3O9mhsm1BinTjD0NfoAy5idZAhVVUbi6xb2RWexiHzgYw";
-	private final static String accessKey = "2869307315-TAMtDAoMzhiUvgaLjxejTuEyTjvl2XcXaYw4L3X";
-	private final static String tokenPrivate = "gpvuKSifiNZnwk1egNtVOumZmpNNk6MVXwOMdTL3lPP2X";
 
 	public static void main(String[] args) throws ServletException, IOException {
 		new TwitterReaderForParticularUser().doPost(null, null);
@@ -46,10 +42,10 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 
 		try {
 			cb = new ConfigurationBuilder();
-			cb.setDebugEnabled(true).setOAuthConsumerKey(consumerKey)
-					.setOAuthConsumerSecret(consumerSecret)
-					.setOAuthAccessToken(accessKey)
-					.setOAuthAccessTokenSecret(tokenPrivate);
+			cb.setDebugEnabled(true).setOAuthConsumerKey(Configuration.twitterConsumerKey)
+					.setOAuthConsumerSecret(Configuration.twitterConsumerSecret)
+					.setOAuthAccessToken(Configuration.twitterAccessKey)
+					.setOAuthAccessTokenSecret(Configuration.twitterTokenPrivate);
 			
 			String name = req.getParameter("username");
 			Twitter twitter = new TwitterFactory(cb.build()).getInstance();

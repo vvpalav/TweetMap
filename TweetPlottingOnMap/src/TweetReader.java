@@ -14,10 +14,6 @@ public final class TweetReader implements StatusListener {
 
 	private final DBHelper db;
 	private final ConfigurationBuilder cb;
-	private final String consumerKey = "x5R4hzLsACZXQjGsK0u49riNi";
-	private final String consumerSecret = "yfl9C3O9mhsm1BinTjD0NfoAy5idZAhVVUbi6xb2RWexiHzgYw";
-	private final String accessKey = "2869307315-TAMtDAoMzhiUvgaLjxejTuEyTjvl2XcXaYw4L3X";
-	private final String tokenPrivate = "gpvuKSifiNZnwk1egNtVOumZmpNNk6MVXwOMdTL3lPP2X";
 	private LinkedList<Long> list;
 
 	public static void main(String[] args) throws TwitterException, InterruptedException {
@@ -43,10 +39,10 @@ public final class TweetReader implements StatusListener {
 		this.list = new LinkedList<Long>();
 		this.db = new DBHelper();
 		this.cb = new ConfigurationBuilder();
-		this.cb.setDebugEnabled(true).setOAuthConsumerKey(consumerKey)
-				.setOAuthConsumerSecret(consumerSecret)
-				.setOAuthAccessToken(accessKey)
-				.setOAuthAccessTokenSecret(tokenPrivate);
+		this.cb.setDebugEnabled(true).setOAuthConsumerKey(Configuration.twitterConsumerKey)
+		.setOAuthConsumerSecret(Configuration.twitterConsumerSecret)
+		.setOAuthAccessToken(Configuration.twitterAccessKey)
+		.setOAuthAccessTokenSecret(Configuration.twitterTokenPrivate);
 	}
 
 	public void onStatus(Status status) {
