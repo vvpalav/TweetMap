@@ -22,110 +22,175 @@
 <script src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
 <script src="https://maps.googleapis.com/maps/api/js"></script>
 <script>
-
-	var req, rcvReq;
+	var httpKeywordReq, httpAllTweetReq, httpSpecificUserTweetReq, mapOptions, map;
+	var markers = []; 
+	var pinColorRed = "FE7569";
+	var pinColorGreen = "33FF00";
+	var pinColorNeutral = "FFFF33";
+    
+	updateMapWithMarker('${twitterMsg}');
 	
-	function loadDefaultMap(){
-		req = retrieveKeywords();
-		rcvReq = retrieveTweets("input=NoKeyword");
-	}
-	
-	function retrieveKeywords(){
-		if (window.XMLHttpRequest) {
-			req = new XMLHttpRequest();
-		} else if(window.ActiveXObject) {
-			req = new ActiveXObject("Microsoft.XMLHTTP"); 
+	function updateMapWithMarker(data) {
+		if (data != null && data.length > 0) {
+			alert("Got data from HttpEndpoint " + data);
+			json = JSON.parse(data);
+			point = new google.maps.LatLng(parseFloat(json.latitude),
+					parseFloat(json.longitude));
+			addMarker(point, json.text);
 		}
-		req.open('POST', '/TweetMapServerForKeyword', true);
-		req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		req.onreadystatechange = handleKeywordsResponse;
-		req.send();
-		return req;
 	}
 	
-	function handleKeywordsResponse(){
-		if (req.readyState == 4) {
-			var values = JSON.parse(req.responseText);
+	function addMarker(location, text) {
+		var pinImage = new google.maps.MarkerImage(
+				"http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|"
+						+ pinColorGreen, new google.maps.Size(21, 34),
+				new google.maps.Point(0, 0), new google.maps.Point(10, 34));
+
+		var pinShadow = new google.maps.MarkerImage(
+				"http://chart.apis.google.com/chart?chst=d_map_pin_shadow",
+				new google.maps.Size(40, 37), new google.maps.Point(0, 0),
+				new google.maps.Point(12, 35));
+
+		marker = new google.maps.Marker({
+			position : location,
+			map : map,
+			title : text,
+			icon : pinImage,
+			shadow : pinShadow
+		});
+
+		markers.push(marker);
+	}
+
+	function setAllMap(map) {
+		for (var i = 0; i < markers.length; i++) {
+			markers[i].setMap(map);
+		}
+	}
+
+	function clearMarkers() {
+		setAllMap(null);
+	}
+
+	function showMarkers() {
+		setAllMap(map);
+	}
+
+	function deleteMarkers() {
+		clearMarkers();
+		markers = [];
+	}
+
+	function loadDefaultMap() {
+		retrieveKeywords();
+		retrieveTweets("input=NoKeyword");
+	}
+
+	function retrieveKeywords() {
+		if (window.XMLHttpRequest) {
+			httpKeywordReq = new XMLHttpRequest();
+		} else if (window.ActiveXObject) {
+			httpKeywordReq = new ActiveXObject("Microsoft.XMLHTTP");
+		}
+		httpKeywordReq.open('POST', '/TweetMapServerForKeyword', true);
+		httpKeywordReq.setRequestHeader('Content-Type',
+				'application/x-www-form-urlencoded');
+		httpKeywordReq.onreadystatechange = handleKeywordsResponse;
+		httpKeywordReq.send();
+	}
+
+	function handleKeywordsResponse() {
+		if (httpKeywordReq.readyState == 4) {
+			var values = JSON.parse(httpKeywordReq.responseText);
 			var dropdown = document.getElementById("selectKeyword");
 			kw = values.keywords;
-		    for (var i = 0; i < kw.length; i++){    
-		    	var optn = document.createElement("OPTION");
-			    optn.text = kw[i];
-			    optn.value = kw[i];
-			    dropdown.options.add(optn);
-		    }
+			for (var i = 0; i < kw.length; i++) {
+				var optn = document.createElement("OPTION");
+				optn.text = kw[i];
+				optn.value = kw[i];
+				dropdown.options.add(optn);
+			}
 		}
 	}
-	
-	function retrieveTweets(keyword){
+
+	function retrieveTweets(keyword) {
 		if (window.XMLHttpRequest) {
-			rcvReq = new XMLHttpRequest();
-		} else if(window.ActiveXObject) {
-			rcvReq = new ActiveXObject("Microsoft.XMLHTTP"); 
+			httpAllTweetReq = new XMLHttpRequest();
+		} else if (window.ActiveXObject) {
+			httpAllTweetReq = new ActiveXObject("Microsoft.XMLHTTP");
 		}
-		rcvReq.open('POST', '/TweetMapServerForTweets', true);
-		rcvReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		rcvReq.onreadystatechange = handleTweetsResponse;
-		rcvReq.send(keyword);
-		return rcvReq;
+		httpAllTweetReq.open('POST', '/TweetMapServerForTweets', true);
+		httpAllTweetReq.setRequestHeader('Content-Type',
+				'application/x-www-form-urlencoded');
+		httpAllTweetReq.onreadystatechange = handleTweetsResponse;
+		httpAllTweetReq.send(keyword);
 	}
-	
-	function handleTweetsResponse(){
-		if (rcvReq.readyState == 4) {
-			initialize(JSON.parse(rcvReq.responseText));
-			google.maps.event.addDomListener(window, 'load', initialize);
+
+	function handleTweetsResponse() {
+		if (httpAllTweetReq.readyState == 4) {
+			deleteMarkers();
+			var myVar = JSON.parse(httpAllTweetReq.responseText);
+			var data = myVar.data;
+			for (var j = 0; j < data.length; j++) {
+				var json = JSON.parse(data[j]);
+				point = new google.maps.LatLng(json.latitude, json.longitude);
+				var text = "Username: @" + json.username + "\nTweet text: "
+						+ json.text;
+				addMarker(point, text);
+			}
 		}
 	}
-	
+
 	function initialize(myVar) {
-		var mapOptions = {
-			center: new google.maps.LatLng(20,-10),
-			zoom: 2,
-			mapTypeId:google.maps.MapTypeId.ROADMAP
-  		};
-		var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-		var latlng = myVar.latlon;
-  		for (var j = 0; j < latlng.length; j++) {
-	    	var str = latlng[j];
-	    	var res = str.split(" "); 
-	    	point = new google.maps.LatLng(parseFloat(res[0]), parseFloat(res[1]));
-	    	marker = new google.maps.Marker({
-	            position: point,
-	            map: map
-	       	}); 
-		}
+		mapOptions = {
+			center : new google.maps.LatLng(20, -10),
+			zoom : 2,
+			mapTypeId : google.maps.MapTypeId.ROADMAP
+		};
+		map = new google.maps.Map(document.getElementById('map-canvas'),
+				mapOptions);
 	}
-	
+
 	function getTweets() {
 		var txt = document.getElementById('username').value;
 		if (txt.length > 0) {
 			if (window.XMLHttpRequest) {
-				newReq = new XMLHttpRequest();
-			} else if(window.ActiveXObject) {
-				newReq = new ActiveXObject("Microsoft.XMLHTTP"); 
+				httpSpecificUserTweetReq = new XMLHttpRequest();
+			} else if (window.ActiveXObject) {
+				httpSpecificUserTweetReq = new ActiveXObject(
+						"Microsoft.XMLHTTP");
 			}
-			newReq.open('POST', '/TwitterReaderForParticularUser', true);
-			newReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-			newReq.onreadystatechange = handleTweetsResponseForGivenUser;
-			newReq.send("username=" + txt);
+			httpSpecificUserTweetReq.open('POST',
+					'/TwitterReaderForParticularUser', true);
+			httpSpecificUserTweetReq.setRequestHeader('Content-Type',
+					'application/x-www-form-urlencoded');
+			httpSpecificUserTweetReq.onreadystatechange = handleTweetsResponseForGivenUser;
+			httpSpecificUserTweetReq.send("username=" + txt);
 		} else {
 			var elem = document.getElementById('selectKeyword');
 			var strUser = elem.options[elem.selectedIndex].value;
 			if (strUser == "All Tweets") {
-				rcvReq = retrieveTweets("input=NoKeyword");
+				httpAllTweetReq = retrieveTweets("input=NoKeyword");
 			} else {
-				rcvReq = retrieveTweets("input=" + strUser);
+				httpAllTweetReq = retrieveTweets("input=" + strUser);
 			}
 		}
 	}
-	
-	
+
 	function handleTweetsResponseForGivenUser() {
-		if (newReq.readyState == 4) {
-			var json = JSON.parse(newReq.responseText);
+		if (httpSpecificUserTweetReq.readyState == 4) {
+			deleteMarkers();
+			var json = JSON.parse(httpSpecificUserTweetReq.responseText);
 			if (json.error == "success") {
-				initialize(json);
-				google.maps.event.addDomListener(window, 'load', initialize);
+				var myVar = JSON.parse(httpSpecificUserTweetReq.responseText);
+				var latlng = myVar.latlon;
+				for (var j = 0; j < latlng.length; j++) {
+					var str = latlng[j];
+					var res = str.split(" ");
+					point = new google.maps.LatLng(parseFloat(res[0]),
+							parseFloat(res[1]));
+					addMarker(point);
+				}
 			} else if (json.error == "failed") {
 				alert("Failed to pull tweets for "
 						+ document.getElementById('username').value + "\n"
@@ -142,10 +207,13 @@
 			document.getElementById('selectKeyword').disabled = false;
 		}
 	}
+
+	google.maps.event.addDomListener(window, 'load', initialize);
 </script>
 </head>
 <body onload="loadDefaultMap()">
 	<div id="panel">
+		<button onclick="deleteMarkers()">Clear All Markers</button>
 		<button onclick="getTweets()">Get Tweets</button>
 		<select id="selectKeyword">
    			<option>All Tweets</option>

@@ -27,6 +27,7 @@ public class TweetMapServerForTweets extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
+		System.out.println("received request");
 		String word = req.getParameter("input");
 		if (word != null && word.equals("NoKeyword"))
 			word = null;
@@ -43,9 +44,9 @@ public class TweetMapServerForTweets extends HttpServlet {
 		DBHelper db = new DBHelper();
 		try {
 			for (TweetNode node : db.getAllTweetsFromDB(word)) {
-				array.put(node.getLatLongValue());
+				array.put(node.toJSON());
 			}
-			json.put("latlon", array);
+			json.put("data", array);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}

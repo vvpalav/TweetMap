@@ -83,6 +83,9 @@ public class TweetNode {
 			json.put("text", this.text);
 			json.put("username", this.username);
 			json.put("timestamp", this.timestamp.getTime());
+			if(this.sentiment != null){
+				json.put("sentiment", this.sentiment);
+			}
 		} catch (JSONException e){
 			e.printStackTrace();
 		}

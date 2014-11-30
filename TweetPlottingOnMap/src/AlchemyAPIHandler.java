@@ -18,33 +18,23 @@ public class AlchemyAPIHandler {
 	private String queueUrl;
 	private TwitMapSNSHandler sns;
 	private String snsTopicArn;
-	private static final int threadCount = 1;
-	
-	public static void main(String[] args) {
-		final TwipMapSQSHandler sqs = TwipMapSQSHandler.getSQSHandler();
-		for (int i = 0; i < threadCount; ++i) {
-			new Thread(new Runnable() {
-				public void run() {
-					new AlchemyAPIHandler(sqs).processSQSMessage();
-				}
-			}).start();
-		}
-		while (true) {
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	public AlchemyAPIHandler(TwipMapSQSHandler sqs){
+	private static int liveThreads = 0;
+
+	public AlchemyAPIHandler(TwipMapSQSHandler sqs) {
 		this.sqs = sqs;
 		this.queueUrl = sqs.getQueueURL(Configuration.queueName);
 		this.sns = new TwitMapSNSHandler(Configuration.queueRegion);
 		this.snsTopicArn = this.sns.createSNSTopic(Configuration.httpEndpoint);
 	}
-	
+
+	public static synchronized void changeLiveThreadsValue(int value) {
+		liveThreads = liveThreads + (value);
+	}
+
+	public static synchronized int getLiveThreadsValue() {
+		return liveThreads;
+	}
+
 	public void processSQSMessage() {
 		while (true) {
 			try {
@@ -52,10 +42,22 @@ public class AlchemyAPIHandler {
 				List<Message> list = sqs.getMessagesFromQueue(this.queueUrl);
 				if (list != null) {
 					for (Message m : list) {
-						TweetNode node = new TweetNode(new JSONObject(m.getBody()));
-						JSONObject json = performSentimentAnalysisOnTweet(node.getText());
-						node.setSentiment(json.getJSONObject("docSentiment").getString("type"));
-						sns.sendNotification(this.snsTopicArn, node.toJSON().toString());
+						if (m.getBody().equals(Configuration.stopProcessingMsg)) {
+							changeLiveThreadsValue(-1);
+							break;
+						}
+						sqs.deleteMessageFromQueue(this.queueUrl,
+								m.getReceiptHandle());
+						TweetNode node = new TweetNode(new JSONObject(
+								m.getBody()));
+						JSONObject json = performSentimentAnalysisOnTweet(node
+								.getText());
+						if (!json.getString("status").equalsIgnoreCase("error")) {
+							node.setSentiment(json
+									.getJSONObject("docSentiment").getString("type"));
+							sns.sendNotification(this.snsTopicArn, node
+									.toJSON().toString());
+						}
 					}
 				}
 			} catch (InterruptedException e) {
@@ -65,7 +67,7 @@ public class AlchemyAPIHandler {
 			}
 		}
 	}
-	
+
 	public JSONObject performSentimentAnalysisOnTweet(String text) {
 		try {
 			String data = makeParamString(text);
@@ -73,12 +75,15 @@ public class AlchemyAPIHandler {
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setDoOutput(true);
 			conn.setRequestMethod("POST");
-			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+			conn.setRequestProperty("Content-Type",
+					"application/x-www-form-urlencoded");
 			conn.setRequestProperty("charset", "utf-8");
-			conn.addRequestProperty("Content-Length", Integer.toString(data.length()));
-			DataOutputStream ostream = new DataOutputStream(conn.getOutputStream());
-	        ostream.write(data.getBytes());
-	        ostream.flush();
+			conn.addRequestProperty("Content-Length",
+					Integer.toString(data.length()));
+			DataOutputStream ostream = new DataOutputStream(
+					conn.getOutputStream());
+			ostream.write(data.getBytes());
+			ostream.flush();
 			InputStreamReader in = new InputStreamReader(conn.getInputStream());
 			StringBuilder response = new StringBuilder();
 			int charCode = -1;
@@ -99,12 +104,12 @@ public class AlchemyAPIHandler {
 		}
 		return null;
 	}
-	
-	public String makeParamString(String text){
+
+	public String makeParamString(String text) {
 		StringBuilder data = new StringBuilder();
 		try {
 			data.append("apikey=").append(Configuration.alchemyAPIKey);
-			data.append("&text=").append(URLEncoder.encode(text,"UTF-8"));
+			data.append("&text=").append(URLEncoder.encode(text, "UTF-8"));
 			data.append("&outputMode=json").append("&showSourceText=1");
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();

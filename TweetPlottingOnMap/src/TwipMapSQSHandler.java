@@ -1,4 +1,4 @@
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -10,23 +10,23 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.DeleteQueueRequest;
-import com.amazonaws.services.sqs.model.GetQueueUrlRequest;
+import com.amazonaws.services.sqs.model.ListQueuesResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 
 public class TwipMapSQSHandler {
 	private AmazonSQS sqsHandler;
-	private HashSet<String> queueList;
+	private HashMap<String, String> queueList;
 	private static TwipMapSQSHandler twipMapSQSHandler;
 
 	private TwipMapSQSHandler() {
-		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
+		queueList = new HashMap<String, String>();
+		AWSCredentials credentials = new ProfileCredentialsProvider("EC2").getCredentials();
 		sqsHandler = new AmazonSQSClient(credentials);
 		Region region = Region.getRegion(Regions.fromName(Configuration.queueRegion));
 		sqsHandler.setRegion(region);
-		createMessageQueue(Configuration.queueName);
-		queueList = new HashSet<String>();
+		queueList.put(Configuration.queueName, createMessageQueue(Configuration.queueName));
 	}
 
 	/**
@@ -55,18 +55,27 @@ public class TwipMapSQSHandler {
 	 *         <b>queueURL</b>: URL of newly created queue
 	 */
 	public synchronized String createMessageQueue(String myQueueName) {
-		if (!queueList.contains(myQueueName)) {
-			queueList.add(myQueueName);
-			CreateQueueRequest request = new CreateQueueRequest(myQueueName);
-			return sqsHandler.createQueue(request).getQueueUrl();
+		ListQueuesResult l = sqsHandler.listQueues();
+		for (String s :l.getQueueUrls()){
+			if(s.contains(myQueueName)){
+				deleteQueue(getQueueURL(myQueueName));
+				queueList.remove(myQueueName);
+				try {
+					System.out.println("Wait for 70 secs before "
+							+ "creating new queue after delete queue");
+					Thread.sleep(70 * 1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 		}
-		return null;
+		CreateQueueRequest request = new CreateQueueRequest(myQueueName);
+		return sqsHandler.createQueue(request).getQueueUrl();
 	}
 	
 	public String getQueueURL(String queueName){
-		if (!queueList.contains(queueName)) {
-			GetQueueUrlRequest url = new GetQueueUrlRequest(queueName);
-			return sqsHandler.getQueueUrl(url).getQueueUrl();
+		if (queueList.containsKey(queueName)) {
+			return queueList.get(queueName);
 		}
 		return null;
 	}
@@ -86,7 +95,7 @@ public class TwipMapSQSHandler {
 	 */
 	public synchronized boolean sendMessageToQueue(String myQueueUrl,
 			String message) {
-		if (queueList.contains(myQueueUrl) && message != null) {
+		if (queueList.containsValue(myQueueUrl) && message != null) {
 			sqsHandler.sendMessage(new SendMessageRequest(myQueueUrl, message));
 			return true;
 		}
@@ -105,7 +114,7 @@ public class TwipMapSQSHandler {
 	 *         rejected.
 	 */
 	public synchronized List<Message> getMessagesFromQueue(String myQueueUrl) {
-		if (queueList.contains(myQueueUrl)) {
+		if (queueList.containsValue(myQueueUrl)) {
 			ReceiveMessageRequest request = new ReceiveMessageRequest(myQueueUrl);
 			return sqsHandler.receiveMessage(request).getMessages();
 		}
@@ -127,7 +136,7 @@ public class TwipMapSQSHandler {
 	 */
 	public synchronized boolean deleteMessageFromQueue(String myQueueUrl,
 			String messageRecieptHandle) {
-		if (queueList.contains(myQueueUrl) && messageRecieptHandle != null) {
+		if (queueList.containsValue(myQueueUrl) && messageRecieptHandle != null) {
 			sqsHandler.deleteMessage(new DeleteMessageRequest(myQueueUrl,
 					messageRecieptHandle));
 			return true;
@@ -147,7 +156,7 @@ public class TwipMapSQSHandler {
 	 *         rejected.
 	 */
 	public synchronized boolean deleteQueue(String myQueueUrl) {
-		if (queueList.contains(myQueueUrl)) {
+		if (queueList.containsValue(myQueueUrl)) {
 			sqsHandler.deleteQueue(new DeleteQueueRequest(myQueueUrl));
 			return true;
 		}

@@ -15,12 +15,10 @@ public final class TweetReader implements StatusListener {
 	private final DBHelper db;
 	private final ConfigurationBuilder cb;
 	private LinkedList<Long> list;
-	private TwipMapSQSHandler sqs;
 
 	public static void main(String[] args) throws TwitterException,
 			InterruptedException {
-		TwipMapSQSHandler sqs = TwipMapSQSHandler.getSQSHandler();
-		TweetReader reader = new TweetReader(sqs);
+		TweetReader reader = new TweetReader();
 		try {
 			reader.db.deleteAllTweetsFromDB();
 			TwitterStream twitterStream = new TwitterStreamFactory(
@@ -38,10 +36,9 @@ public final class TweetReader implements StatusListener {
 		}
 	}
 
-	public TweetReader(TwipMapSQSHandler sqs) {
+	public TweetReader() {
 		this.list = new LinkedList<Long>();
-		this.sqs = sqs;
-		this.db = new DBHelper(this.sqs);
+		this.db = new DBHelper();
 		this.cb = new ConfigurationBuilder();
 		this.cb.setDebugEnabled(true)
 				.setOAuthConsumerKey(Configuration.twitterConsumerKey)
@@ -63,8 +60,7 @@ public final class TweetReader implements StatusListener {
 		String user = status.getUser().getScreenName();
 		String text = status.getText();
 		TweetNode node = new TweetNode(id, user, text, latitude, longitude, timestamp);
-		if (text.contains("@"))
-			db.insertTweetIntoDB(node);
+		db.insertTweetIntoDB(node);
 	}
 
 	public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {

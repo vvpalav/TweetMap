@@ -15,7 +15,7 @@ public class TwitMapSNSHandler {
 	
 	public TwitMapSNSHandler(String region){
 		
-		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
+		AWSCredentials credentials = new ProfileCredentialsProvider("EC2").getCredentials();
 		this.snsClient = new AmazonSNSClient(credentials);		                           
 		this.snsClient.setRegion(Region.getRegion(Regions.fromName(region)));
 	}

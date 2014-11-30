@@ -14,8 +14,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 
-import com.amazonaws.util.json.JSONException;
-import com.amazonaws.util.json.JSONObject;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,6 +51,15 @@ public class HttpEndpointForTwiMapSNS extends HttpServlet {
 			logMsgAndSubject += " Message: " + msg.getMessage();
 			log.info(logMsgAndSubject);
 			forwardMessageToJSPPage(req, resp, msg.getMessage());
+		} else if (messagetype.equals("SubscriptionConfirmation")) {
+			Scanner sc = new Scanner(
+					new URL(msg.getSubscribeURL()).openStream());
+			StringBuilder sb = new StringBuilder();
+			while (sc.hasNextLine()) {
+				sb.append(sc.nextLine());
+			}
+			sc.close();
+			SNSHelper.INSTANCE.confirmTopicSubmission(msg);
 		}
 		log.info("Done processing message: " + msg.getMessageId());
 	}
@@ -74,14 +81,12 @@ public class HttpEndpointForTwiMapSNS extends HttpServlet {
 	private void forwardMessageToJSPPage(HttpServletRequest request,
 			HttpServletResponse response, String message) {
 		try {
-			request.setAttribute("twitterMsg", new JSONObject(message).toString());
+			request.setAttribute("twitterMsg", message);
 			getServletContext().getRequestDispatcher("/index.jsp").forward(
 					request, response);
 		} catch (ServletException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 	}
