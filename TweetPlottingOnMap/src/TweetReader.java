@@ -19,10 +19,10 @@ public final class TweetReader implements StatusListener {
 
 	public static void main(String[] args) throws TwitterException,
 			InterruptedException {
-		TwipMapSQSHandler sqs = TwipMapSQSHandler.initializeTwipMapSQSHandler();
+		TwipMapSQSHandler sqs = TwipMapSQSHandler.getSQSHandler();
 		TweetReader reader = new TweetReader(sqs);
 		try {
-			// reader.db.deleteAllTweetsFromDB();
+			reader.db.deleteAllTweetsFromDB();
 			TwitterStream twitterStream = new TwitterStreamFactory(
 					reader.cb.build()).getInstance();
 			twitterStream.addListener(reader);

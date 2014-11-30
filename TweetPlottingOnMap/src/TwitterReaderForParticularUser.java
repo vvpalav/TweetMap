@@ -38,7 +38,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 
 		try {
 			int count = 0;
-			sqs = TwipMapSQSHandler.initializeTwipMapSQSHandler();
+			sqs = TwipMapSQSHandler.getSQSHandler();
 			db = new DBHelper(sqs);
 			cb = new ConfigurationBuilder();
 			cb.setDebugEnabled(true)

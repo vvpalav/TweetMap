@@ -20,14 +20,21 @@ public class AlchemyAPIHandler {
 	private String snsTopicArn;
 	private static final int threadCount = 1;
 	
-	public static void main(String[] args){
-		final TwipMapSQSHandler sqs = TwipMapSQSHandler.initializeTwipMapSQSHandler();
-		for(int i = 0; i < threadCount; i++){
-			new Thread(new Runnable(){
+	public static void main(String[] args) {
+		final TwipMapSQSHandler sqs = TwipMapSQSHandler.getSQSHandler();
+		for (int i = 0; i < threadCount; ++i) {
+			new Thread(new Runnable() {
 				public void run() {
 					new AlchemyAPIHandler(sqs).processSQSMessage();
 				}
-			}).start();;
+			}).start();
+		}
+		while (true) {
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

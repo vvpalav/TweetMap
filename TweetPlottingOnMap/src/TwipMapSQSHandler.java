@@ -37,7 +37,7 @@ public class TwipMapSQSHandler {
 	 * 
 	 * @return <b>TwipMapSQSHandler</b>: Instance of TwipMapSQSHandler
 	 */
-	public static synchronized TwipMapSQSHandler initializeTwipMapSQSHandler() {
+	public static synchronized TwipMapSQSHandler getSQSHandler() {
 		if (twipMapSQSHandler == null) {
 			twipMapSQSHandler = new TwipMapSQSHandler();
 		}
