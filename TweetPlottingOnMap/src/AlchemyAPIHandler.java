@@ -18,6 +18,18 @@ public class AlchemyAPIHandler {
 	private String queueUrl;
 	private TwitMapSNSHandler sns;
 	private String snsTopicArn;
+	private static final int threadCount = 1;
+	
+	public static void main(String[] args){
+		final TwipMapSQSHandler sqs = TwipMapSQSHandler.initializeTwipMapSQSHandler();
+		for(int i = 0; i < threadCount; i++){
+			new Thread(new Runnable(){
+				public void run() {
+					new AlchemyAPIHandler(sqs).processSQSMessage();
+				}
+			}).start();;
+		}
+	}
 	
 	public AlchemyAPIHandler(TwipMapSQSHandler sqs){
 		this.sqs = sqs;

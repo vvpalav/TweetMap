@@ -58,7 +58,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 					break;
 				List<Status> tweets = result.getTweets();
 				for (Status tweet : tweets) {
-					if (tweet.getGeoLocation() != null) {
+					if (tweet.getGeoLocation() != null && tweet.getText().contains("@")) {
 						count++;
 						System.out.println("@" + tweet.getUser().getScreenName() + " - "
 								+ tweet.getText());
@@ -69,11 +69,11 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 						String user = tweet.getUser().getScreenName();
 						String text = tweet.getText();
 						TweetNode node = new TweetNode(id, user, text, latitude, longitude, timestamp);
-						if (text.contains("@"))
-							db.insertTweetIntoDB(node);
+						db.insertTweetIntoDB(node);
 					}
 				}
-			} while (((query = result.nextQuery()) != null) && (count < 100));
+				if(count >= 0) break;
+			} while ((query = result.nextQuery()) != null);
 		} catch (TwitterException e) {
 			e.printStackTrace();
 		} 

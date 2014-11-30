@@ -67,8 +67,7 @@ public class DBHelper {
 			stmt.setObject(4, node.getLatitude(), java.sql.Types.DOUBLE);
 			stmt.setObject(5, node.getLongitude(), java.sql.Types.DOUBLE);
 			stmt.setObject(6, node.getTimestamp(), java.sql.Types.TIMESTAMP);
-			stmt.executeUpdate();
-			if(sqs != null){
+			if(stmt.executeUpdate() > 0 && sqs != null){
 				sqs.sendMessageToQueue(this.queueURL, node.toJSON().toString());
 			}
 		} catch (SQLException e) {

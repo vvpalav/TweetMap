@@ -16,13 +16,11 @@ public final class TweetReader implements StatusListener {
 	private final ConfigurationBuilder cb;
 	private LinkedList<Long> list;
 	private TwipMapSQSHandler sqs;
-	private static final int threadCount = 1;
 
 	public static void main(String[] args) throws TwitterException,
 			InterruptedException {
 		TwipMapSQSHandler sqs = TwipMapSQSHandler.initializeTwipMapSQSHandler();
 		TweetReader reader = new TweetReader(sqs);
-		startAlchemyAPIListenerThreads(sqs);
 		try {
 			// reader.db.deleteAllTweetsFromDB();
 			TwitterStream twitterStream = new TwitterStreamFactory(
@@ -37,16 +35,6 @@ public final class TweetReader implements StatusListener {
 			Thread.sleep(6000);
 			reader.db.close();
 			System.exit(0);
-		}
-	}
-
-	private static void startAlchemyAPIListenerThreads(final TwipMapSQSHandler sqs) {
-		for(int i = 0; i < threadCount; i++){
-			new Thread(new Runnable(){
-				public void run() {
-					new AlchemyAPIHandler(sqs).processSQSMessage();
-				}
-			}).start();;
 		}
 	}
 

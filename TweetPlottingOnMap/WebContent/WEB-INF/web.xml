@@ -43,4 +43,14 @@
       <url-pattern>/TwitterReaderForParticularUser</url-pattern>
   </servlet-mapping>
   
+  <servlet>
+  	  <display-name>HttpEndpointForTwiMapSNS</display-name>
+      <servlet-name>HttpEndpointForTwiMapSNS</servlet-name>
+      <servlet-class>HttpEndpointForTwiMapSNS</servlet-class>
+  </servlet>
+  
+  <servlet-mapping>
+      <servlet-name>HttpEndpointForTwiMapSNS</servlet-name>
+      <url-pattern>/HttpEndpointForTwiMapSNS</url-pattern>
+  </servlet-mapping>
 </web-app>
