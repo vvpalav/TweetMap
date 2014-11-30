@@ -17,7 +17,7 @@ public class DBHelper {
 	public static void main(String[] args) {
 		DBHelper db = new DBHelper();
 
-		TweetNode node = new TweetNode(2, "vinayak", "sometext", 38.898556,
+		TweetNode node = new TweetNode(4, "vinayak", "sometext", 38.898556,
 				-77.037852, new java.util.Date());
 		db.insertTweetIntoDB(node);
 		for (TweetNode n : db.getAllTweetsFromDB("")) {
@@ -68,7 +68,9 @@ public class DBHelper {
 			stmt.setObject(5, node.getLongitude(), java.sql.Types.DOUBLE);
 			stmt.setObject(6, node.getTimestamp(), java.sql.Types.TIMESTAMP);
 			stmt.executeUpdate();
-			sqs.sendMessageToQueue(this.queueURL, node.getText());
+			if(sqs != null){
+				sqs.sendMessageToQueue(this.queueURL, node.getText());
+			}
 		} catch (SQLException e) {
 			System.out.println("Error while inserting tweet into database");
 			e.printStackTrace();

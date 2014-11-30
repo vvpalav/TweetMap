@@ -16,10 +16,14 @@ public class AlchemyAPIHandler {
 
 	private TwipMapSQSHandler sqs;
 	private String queueUrl;
+	private TwitMapSNSHandler sns;
+	private String snsTopicArn;
 	
-	AlchemyAPIHandler(TwipMapSQSHandler sqs){
+	public AlchemyAPIHandler(TwipMapSQSHandler sqs){
 		this.sqs = sqs;
 		this.queueUrl = sqs.getQueueURL(Configuration.queueName);
+		this.sns = new TwitMapSNSHandler(Configuration.queueRegion);
+		this.snsTopicArn = this.sns.createSNSTopic(Configuration.httpEndpoint);
 	}
 	
 	public void processSQSMessage() {
@@ -29,10 +33,13 @@ public class AlchemyAPIHandler {
 				List<Message> list = sqs.getMessagesFromQueue(this.queueUrl);
 				if (list != null) {
 					for (Message m : list) {
-						performSentimentAnalysisOnTweet(m.getBody());
+						JSONObject json = performSentimentAnalysisOnTweet(m.getBody());
+						sns.sendNotification(this.snsTopicArn, json.getString("text"));
 					}
 				}
 			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
 				e.printStackTrace();
 			}
 		}
