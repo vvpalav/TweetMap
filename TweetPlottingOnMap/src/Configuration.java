@@ -12,4 +12,5 @@ public class Configuration {
 	public final static String dbURL = "";
 	public final static String dbUser = "";
 	public final static String dbPassword = "";
+	public final static String httpEndpoint = "";
 }
