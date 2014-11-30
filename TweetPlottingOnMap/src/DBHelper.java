@@ -69,7 +69,7 @@ public class DBHelper {
 			stmt.setObject(6, node.getTimestamp(), java.sql.Types.TIMESTAMP);
 			stmt.executeUpdate();
 			if(sqs != null){
-				sqs.sendMessageToQueue(this.queueURL, node.getText());
+				sqs.sendMessageToQueue(this.queueURL, node.toJSON().toString());
 			}
 		} catch (SQLException e) {
 			System.out.println("Error while inserting tweet into database");

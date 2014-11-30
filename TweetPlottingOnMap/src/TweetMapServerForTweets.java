@@ -43,7 +43,7 @@ public class TweetMapServerForTweets extends HttpServlet {
 		DBHelper db = new DBHelper();
 		try {
 			for (TweetNode node : db.getAllTweetsFromDB(word)) {
-				array.put(node.getStringValue());
+				array.put(node.getLatLongValue());
 			}
 			json.put("latlon", array);
 		} catch (JSONException e) {

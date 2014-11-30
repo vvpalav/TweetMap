@@ -29,12 +29,14 @@ public class AlchemyAPIHandler {
 	public void processSQSMessage() {
 		while (true) {
 			try {
-				Thread.sleep(4000);
+				Thread.sleep(5000);
 				List<Message> list = sqs.getMessagesFromQueue(this.queueUrl);
 				if (list != null) {
 					for (Message m : list) {
-						JSONObject json = performSentimentAnalysisOnTweet(m.getBody());
-						sns.sendNotification(this.snsTopicArn, json.getString("text"));
+						TweetNode node = new TweetNode(new JSONObject(m.getBody()));
+						JSONObject json = performSentimentAnalysisOnTweet(node.getText());
+						node.setSentiment(json.getJSONObject("docSentiment").getString("type"));
+						sns.sendNotification(this.snsTopicArn, node.toJSON().toString());
 					}
 				}
 			} catch (InterruptedException e) {

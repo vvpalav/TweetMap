@@ -1,7 +1,6 @@
 import java.util.HashSet;
 import java.util.List;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
@@ -21,22 +20,12 @@ public class TwipMapSQSHandler {
 	private HashSet<String> queueList;
 	private static TwipMapSQSHandler twipMapSQSHandler;
 
-	private TwipMapSQSHandler(String regionName) {
-		AWSCredentials credentials = null;
-		try {
-			credentials = new ProfileCredentialsProvider("default")
-					.getCredentials();
-		} catch (Exception e) {
-			throw new AmazonClientException(
-					"Cannot load the credentials from the credential profiles file. "
-							+ "Please make sure that your credentials file is at the correct "
-							+ "location (/Users/daniel/.aws/credentials), and is in valid format.",
-					e);
-		}
-
+	private TwipMapSQSHandler() {
+		AWSCredentials credentials = new ProfileCredentialsProvider("default").getCredentials();
 		sqsHandler = new AmazonSQSClient(credentials);
-		Region region = Region.getRegion(Regions.fromName(regionName));
+		Region region = Region.getRegion(Regions.fromName(Configuration.queueRegion));
 		sqsHandler.setRegion(region);
+		createMessageQueue(Configuration.queueName);
 		queueList = new HashSet<String>();
 	}
 
@@ -48,9 +37,9 @@ public class TwipMapSQSHandler {
 	 * 
 	 * @return <b>TwipMapSQSHandler</b>: Instance of TwipMapSQSHandler
 	 */
-	public static synchronized TwipMapSQSHandler initializeTwipMapSQSHandler(String regionName) {
+	public static synchronized TwipMapSQSHandler initializeTwipMapSQSHandler() {
 		if (twipMapSQSHandler == null) {
-			twipMapSQSHandler = new TwipMapSQSHandler(regionName);
+			twipMapSQSHandler = new TwipMapSQSHandler();
 		}
 		return twipMapSQSHandler;
 	}

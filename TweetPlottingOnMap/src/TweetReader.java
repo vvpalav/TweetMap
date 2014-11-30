@@ -15,18 +15,22 @@ public final class TweetReader implements StatusListener {
 	private final DBHelper db;
 	private final ConfigurationBuilder cb;
 	private LinkedList<Long> list;
-	private TwipMapSQSHandler sqs; 
+	private TwipMapSQSHandler sqs;
+	private static final int threadCount = 1;
 
-	public static void main(String[] args) throws TwitterException, InterruptedException {
-		TweetReader reader = new TweetReader();
+	public static void main(String[] args) throws TwitterException,
+			InterruptedException {
+		TwipMapSQSHandler sqs = TwipMapSQSHandler.initializeTwipMapSQSHandler();
+		TweetReader reader = new TweetReader(sqs);
+		startAlchemyAPIListenerThreads(sqs);
 		try {
-			//reader.db.deleteAllTweetsFromDB();
+			// reader.db.deleteAllTweetsFromDB();
 			TwitterStream twitterStream = new TwitterStreamFactory(
 					reader.cb.build()).getInstance();
 			twitterStream.addListener(reader);
 			twitterStream.sample();
 			while (reader.db.getTweetCount() <= 200) {
-				Thread.sleep(3000);
+				Thread.sleep(5000);
 			}
 			twitterStream.removeListener(reader);
 		} finally {
@@ -36,21 +40,34 @@ public final class TweetReader implements StatusListener {
 		}
 	}
 
-	public TweetReader() {
+	private static void startAlchemyAPIListenerThreads(final TwipMapSQSHandler sqs) {
+		for(int i = 0; i < threadCount; i++){
+			new Thread(new Runnable(){
+				public void run() {
+					new AlchemyAPIHandler(sqs).processSQSMessage();
+				}
+			}).start();;
+		}
+	}
+
+	public TweetReader(TwipMapSQSHandler sqs) {
 		this.list = new LinkedList<Long>();
-		this.sqs = TwipMapSQSHandler.initializeTwipMapSQSHandler(Configuration.queueRegion);
+		this.sqs = sqs;
 		this.db = new DBHelper(this.sqs);
 		this.cb = new ConfigurationBuilder();
-		this.cb.setDebugEnabled(true).setOAuthConsumerKey(Configuration.twitterConsumerKey)
-		.setOAuthConsumerSecret(Configuration.twitterConsumerSecret)
-		.setOAuthAccessToken(Configuration.twitterAccessKey)
-		.setOAuthAccessTokenSecret(Configuration.twitterTokenPrivate);
+		this.cb.setDebugEnabled(true)
+				.setOAuthConsumerKey(Configuration.twitterConsumerKey)
+				.setOAuthConsumerSecret(Configuration.twitterConsumerSecret)
+				.setOAuthAccessToken(Configuration.twitterAccessKey)
+				.setOAuthAccessTokenSecret(Configuration.twitterTokenPrivate);
 	}
 
 	public void onStatus(Status status) {
-		if(status == null || status.getGeoLocation() == null ) return;
-		
-		System.out.println("@" + status.getUser().getScreenName() + " - " + status.getText());
+		if (status == null || status.getGeoLocation() == null)
+			return;
+
+		System.out.println("@" + status.getUser().getScreenName() + " - "
+				+ status.getText());
 		double latitude = status.getGeoLocation().getLatitude();
 		double longitude = status.getGeoLocation().getLongitude();
 		long id = status.getId();
@@ -58,13 +75,15 @@ public final class TweetReader implements StatusListener {
 		String user = status.getUser().getScreenName();
 		String text = status.getText();
 		TweetNode node = new TweetNode(id, user, text, latitude, longitude, timestamp);
-		if(text.contains("@"))	db.insertTweetIntoDB(node);
+		if (text.contains("@"))
+			db.insertTweetIntoDB(node);
 	}
 
 	public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
-		if(statusDeletionNotice == null) return;
+		if (statusDeletionNotice == null)
+			return;
 		list.add(statusDeletionNotice.getStatusId());
-		if(list.size() >= 100){
+		if (list.size() >= 100) {
 			System.out.println("deleting Tweets from DB");
 			db.deleteTweetWithStatusId(list);
 			list.clear();
