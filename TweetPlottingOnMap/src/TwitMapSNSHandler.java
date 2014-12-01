@@ -21,26 +21,28 @@ public class TwitMapSNSHandler {
 		this.snsClient.setRegion(Region.getRegion(Regions.fromName(region)));
 	}
 	
-	public void deleteTopicIfExists(String topic){
+	public String checkIfTopicExist(String name){
 		ListTopicsResult list = snsClient.listTopics();
 		for(Topic t : list.getTopics()){
-			t.getTopicArn().endsWith(topic);
-			this.deleteSNSTopic(t.getTopicArn());
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			if(t.getTopicArn().contains(name))
+				return t.getTopicArn();
 		}
+		return null;
 	}
 	
-	public String createSNSTopic(String httpEndpoint){
-		deleteTopicIfExists(Configuration.snsTopic);
-		CreateTopicRequest createTopicRequest = new CreateTopicRequest(Configuration.snsTopic);
-		String topicArn = snsClient.createTopic(createTopicRequest).getTopicArn();
-		SubscribeRequest subRequest = new SubscribeRequest(topicArn, "http", httpEndpoint);
-		this.snsClient.subscribe(subRequest);
-		return topicArn;
+	public String createSNSTopic(String httpEndpoint) {
+		String arn = checkIfTopicExist(Configuration.snsTopic);
+		if (arn == null) {
+			CreateTopicRequest createTopicRequest = new CreateTopicRequest(
+					Configuration.snsTopic);
+			String topicArn = snsClient.createTopic(createTopicRequest)
+					.getTopicArn();
+			SubscribeRequest subRequest = new SubscribeRequest(topicArn,
+					"http", httpEndpoint);
+			this.snsClient.subscribe(subRequest);
+			return topicArn;
+		}
+		return arn;
 	}
 	
 	public void sendNotification(String topicArn, String msg){

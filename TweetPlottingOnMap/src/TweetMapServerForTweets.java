@@ -7,9 +7,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import twitter4j.JSONArray;
-import twitter4j.JSONException;
-import twitter4j.JSONObject;
+import com.amazonaws.util.json.JSONArray;
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
 
 public class TweetMapServerForTweets extends HttpServlet {
 
@@ -19,7 +19,6 @@ public class TweetMapServerForTweets extends HttpServlet {
 	public TweetMapServerForTweets(){
 		super();
 	}
-	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -33,26 +32,37 @@ public class TweetMapServerForTweets extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		log.info("received request");
+		
 		String word = req.getParameter("input");
-		if (word != null && word.equals("NoKeyword"))
-			word = null;
-		JSONObject json = retrieveTweetData(word);
+		String type = req.getParameter("type");
+		log.info("received request with type " + type + " and word " + word);
+		JSONObject json = retrieveTweetData(word, type);
 		resp.setContentType("text/json");
 		PrintWriter out = resp.getWriter();
 		out.println(json.toString());
 		out.flush(); out.close();
 	}
 
-	public static JSONObject retrieveTweetData(String word) {
+	public static JSONObject retrieveTweetData(String word, String type) {
 		JSONObject json = new JSONObject();
 		JSONArray array = new JSONArray();
 		DBHelper db = new DBHelper();
 		try {
-			for (TweetNode node : db.getAllTweetsFromDB(word)) {
-				array.put(node.toJSON());
+			for (TweetNode node : db.getAllTweetsFromDB(word, type)) {
+				array.put(node.toJSON().toString());
 			}
 			json.put("data", array);
+			json.put("count", array.length());
+			if(type != null){
+				json.put("type", type);
+			} else {
+				json.put("type", "general");
+			}
+			if(array.length() == 0 && type != null && type.equals("live")
+					&& AlchemyAPIHandler.getLiveThreadsValue() == 0){
+				System.out.println("Request type live: No more tweets");
+				json.put("msg", "done");
+			}
 		} catch (JSONException e) {
 			e.printStackTrace();
 		} finally {

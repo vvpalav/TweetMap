@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class HttpEndpointForTwiMapSNS extends HttpServlet {
 
 	private static final long serialVersionUID = 2306967918597987927L;
+	private DBHelper db = new DBHelper();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -103,13 +106,9 @@ public class HttpEndpointForTwiMapSNS extends HttpServlet {
 	private void forwardMessageToJSPPage(HttpServletRequest request,
 			HttpServletResponse response, String message) {
 		try {
-			System.out.println("Forwarding tweet to webpage: " + message); 
-			request.setAttribute("twitterMsg", message);
-			getServletContext().getRequestDispatcher("/index.jsp")
-				.include(request, response);
-		} catch (ServletException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+			System.out.println("Storing tweet in DB: " + message);
+			db.insertTweetIntoDB(new TweetNode(new JSONObject(message)));
+		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 	}

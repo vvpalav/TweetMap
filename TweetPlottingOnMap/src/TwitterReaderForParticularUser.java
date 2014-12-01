@@ -16,6 +16,8 @@ import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
 import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
 
 public class TwitterReaderForParticularUser extends HttpServlet {
 
@@ -54,7 +56,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 			startAlchemyThreads(sqs);
 			String name = req.getParameter("username");
 			Twitter twitter = new TwitterFactory(cb.build()).getInstance();
-
+			System.out.println("Received twit analysis for " + name);
 			Query query = new Query(name);
 			QueryResult result = null;
 			do {
@@ -74,27 +76,46 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 						String text = tweet.getText();
 						TweetNode node = new TweetNode(id, user, text,
 								latitude, longitude, timestamp);
+						node.setType("live");
 						System.out.println(node.toString());
 						sqs.sendMessageToQueue(queueUrl, node.toJSON().toString());
 					}
 				}
-				if (count >= 10)
+				if (count >= 30)
 					break;
 			} while ((query = result.nextQuery()) != null);
+			JSONObject json = new JSONObject();
+			json.put("msg", "processing");
+			resp.getWriter().write(json.toString());
+			resp.getWriter().flush();
+			resp.getWriter().close();
 			Thread.sleep(2000);
 			sqs.sendMessageToQueue(queueUrl, Configuration.stopProcessingMsg);
 			while (AlchemyAPIHandler.getLiveThreadsValue() > 0) {
-				Thread.sleep(5000);
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		} catch (TwitterException e) {
+			JSONObject json = new JSONObject();
+			try {
+				json.put("msg", "exception");
+				json.put("text", e.getMessage());
+				resp.getWriter().write(json.toString());
+				resp.getWriter().flush();
+				resp.getWriter().close();
+			} catch (JSONException e1) {
+				e1.printStackTrace();
+			}
 			e.printStackTrace();
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
 		} finally {
-			System.out.println("Finished Processing all tweets, deleting Queue and topic");
-			new TwitMapSNSHandler(Configuration.queueRegion)
-				.deleteTopicIfExists(Configuration.snsTopic);
-			sqs.deleteQueue(queueUrl);
+			System.out.println("Finished Processing all tweets");
 		}
 	}
 

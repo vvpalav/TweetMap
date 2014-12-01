@@ -23,7 +23,7 @@ public final class TweetReader implements StatusListener {
 			InterruptedException {
 		TweetReader reader = new TweetReader();
 		try {
-			reader.db.deleteAllTweetsFromDB();
+			reader.db.deleteAllTweetsFromDB(null);
 			TwitterStream twitterStream = new TwitterStreamFactory(
 					reader.cb.build()).getInstance();
 			twitterStream.addListener(reader);

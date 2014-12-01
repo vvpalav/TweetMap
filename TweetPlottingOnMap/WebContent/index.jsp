@@ -22,25 +22,13 @@
 <script src="https://maps.googleapis.com/maps/api/js?libraries=visualization"></script>
 <script src="https://maps.googleapis.com/maps/api/js"></script>
 <script>
-	var httpKeywordReq, httpAllTweetReq, httpSpecificUserTweetReq, mapOptions, map;
+	var httpKeywordReq, httpAllTweetReq, interval;
+	var httpSpecificUserTweetReq, mapOptions, map;
 	var markers = []; 
 	var pinColorNegative = "FE7569";
 	var pinColorPositive = "33FF00";
 	var pinColorNeutral = "FFFF33";
 	var pinColorDefault = "E3E3E3";
-    
-	updateMapWithMarker();
-	
-	function updateMapWithMarker(data) {
-		data = <%= request.getAttribute("twitterMsg") %>
-		if (data != null && data.length > 0) {
-			alert("Got data from HttpEndpoint " + data);
-			json = JSON.parse(data);
-			point = new google.maps.LatLng(parseFloat(json.latitude),
-					parseFloat(json.longitude));
-			addMarker(point, json.text);
-		}
-	}
 	
 	function addMarker(location, text, pc) {
 		var pinImage = new google.maps.MarkerImage(
@@ -85,7 +73,7 @@
 
 	function loadDefaultMap() {
 		retrieveKeywords();
-		retrieveTweets("input=NoKeyword");
+		retrieveTweets();
 	}
 
 	function retrieveKeywords() {
@@ -130,12 +118,18 @@
 
 	function handleTweetsResponse() {
 		if (httpAllTweetReq.readyState == 4) {
-			deleteMarkers();
+			
 			var myVar = JSON.parse(httpAllTweetReq.responseText);
+			if(myVar.type != "live"){
+				deleteMarkers();
+			}
 			var data = myVar.data;
+			if(myVar.count == 0 && myVar.type == "live" && myVar.msg == "done"){
+				clearInterval(interval);
+			}
 			for (var j = 0; j < data.length; j++) {
 				var json = JSON.parse(data[j]);
-				point = new google.maps.LatLng(json.latitude, json.longitude);
+				var point = new google.maps.LatLng(json.latitude, json.longitude);
 				var text = "Username: @" + json.username + "\n"
 						+ "Sentiment: " + json.sentiment + "\n"
 						+ "Timestamp: " + json.timestamp + "\n"
@@ -176,36 +170,28 @@
 					'/TwitterReaderForParticularUser', true);
 			httpSpecificUserTweetReq.setRequestHeader('Content-Type',
 					'application/x-www-form-urlencoded');
-			httpSpecificUserTweetReq.onreadystatechange = handleTweetsResponseForGivenUser;
+			httpSpecificUserTweetReq.onreadystatechange = httpSpecificUserTweetReq;
 			httpSpecificUserTweetReq.send("username=" + txt);
+			
+			deleteMarkers();
+			interval = setInterval(function(){ retrieveTweets("type=live"); }, 3000);
 		} else {
 			var elem = document.getElementById('selectKeyword');
 			var strUser = elem.options[elem.selectedIndex].value;
 			if (strUser == "All Tweets") {
-				retrieveTweets("input=NoKeyword");
+				retrieveTweets();
 			} else {
 				retrieveTweets("input=" + strUser);
 			}
 		}
 	}
-
-	function handleTweetsResponseForGivenUser() {
-		if (httpSpecificUserTweetReq.readyState == 4) {
-			var json = JSON.parse(httpSpecificUserTweetReq.responseText);
-			if (json.error == "success") {
-				var myVar = JSON.parse(httpSpecificUserTweetReq.responseText);
-				var latlng = myVar.latlon;
-				for (var j = 0; j < latlng.length; j++) {
-					var str = latlng[j];
-					var res = str.split(" ");
-					point = new google.maps.LatLng(parseFloat(res[0]),
-							parseFloat(res[1]));
-					addMarker(point);
-				}
-			} else if (json.error == "failed") {
-				alert("Failed to pull tweets for "
-						+ document.getElementById('username').value + "\n"
-						+ " Message: " + json.msg);
+	
+	function httpSpecificUserTweetReq(){
+		if (httpAllTweetReq.readyState == 4) {
+			var myVar = JSON.parse(httpSpecificUserTweetReq.responseText);
+			if(myVar.msg == "exception"){
+				clearInterval(interval);
+				alert(myVar.text);
 			}
 		}
 	}
@@ -218,7 +204,7 @@
 			document.getElementById('selectKeyword').disabled = false;
 		}
 	}
-
+	
 	google.maps.event.addDomListener(window, 'load', initialize);
 </script>
 </head>

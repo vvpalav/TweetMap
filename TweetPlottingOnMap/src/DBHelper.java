@@ -18,7 +18,7 @@ public class DBHelper {
 		TweetNode node = new TweetNode(4, "vinayak", "sometext", 38.898556,
 				-77.037852, new java.util.Date());
 		db.insertTweetIntoDB(node);
-		for (TweetNode n : db.getAllTweetsFromDB("")) {
+		for (TweetNode n : db.getAllTweetsFromDB(null, null)) {
 			System.out.println(n);
 		}
 
@@ -50,7 +50,7 @@ public class DBHelper {
 	}
 
 	public void insertTweetIntoDB(TweetNode node) {
-		String SQL = "insert into tweets values (?, ?, ?, ?, ?, ?, ?)";
+		String SQL = "insert into tweets values (?, ?, ?, ?, ?, ?, ?, ?)";
 		try {
 			PreparedStatement stmt = conn.prepareStatement(SQL);
 			stmt.setObject(1, node.getId(), java.sql.Types.BIGINT);
@@ -60,6 +60,7 @@ public class DBHelper {
 			stmt.setObject(5, node.getLongitude(), java.sql.Types.DOUBLE);
 			stmt.setObject(6, node.getTimestamp(), java.sql.Types.TIMESTAMP);
 			stmt.setObject(7, node.getSentiment(), java.sql.Types.VARCHAR);
+			stmt.setObject(8, node.getType(), java.sql.Types.VARCHAR);
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("Error while inserting tweet into database");
@@ -67,12 +68,17 @@ public class DBHelper {
 		}
 	}
 
-	public List<TweetNode> getAllTweetsFromDB(String word) {
+	public List<TweetNode> getAllTweetsFromDB(String word, String type) {
 		List<TweetNode> list = new LinkedList<TweetNode>();
 		String SQL = "select * from tweets";
 		if (word != null && word.length() > 0) {
 			SQL += " where text like '%@" + word + "%'";
 		}
+		if (type != null && type.length() > 0) {
+			SQL += (word != null && word.length() > 0) ? " and " : " where ";
+			SQL += " type = '" + type + "'";
+		}
+		System.out.println("SQL: " + SQL);
 		try {
 			ResultSet rs = conn.createStatement().executeQuery(SQL);
 			while (rs.next()) {
@@ -80,20 +86,29 @@ public class DBHelper {
 						rs.getObject(2, String.class), rs.getObject(3,
 								String.class), rs.getObject(4, double.class),
 						rs.getObject(5, double.class), rs.getObject(6,
-								Date.class), rs.getObject(7, String.class));
+								Date.class), rs.getObject(7, String.class),
+								rs.getObject(8, String.class));
 				list.add(node);
+			}
+			if(type != null && type.equals("live")){
+				deleteAllTweetsFromDB(type);
 			}
 		} catch (SQLException e) {
 			System.out.println("Error while fetching tweets from database");
 			e.printStackTrace();
 		}
+		System.out.println("Fetched " + list.size() + " records");
 		return list;
 	}
 
-	public void deleteAllTweetsFromDB() {
+	public void deleteAllTweetsFromDB(String type) {
 		try {
 			System.out.println("Deleting all the tweets from database");
-			conn.createStatement().executeUpdate("delete from tweets");
+			if(type != null && type.length() > 0){
+				conn.createStatement().executeUpdate("delete from tweets where type = '" + type + "'");
+			} else {
+				conn.createStatement().executeUpdate("delete from tweets");
+			}
 		} catch (SQLException e) {
 			System.out.println("Deletion of all the tweets failed");
 			e.printStackTrace();
