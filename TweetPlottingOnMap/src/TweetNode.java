@@ -14,36 +14,49 @@ public class TweetNode {
 	private String text;
 	private String sentiment;
 
-	public TweetNode(long id, String user, String text, double lat, double lon, Date timestamp) {
+	public TweetNode(long id, String user, String text, double lat, double lon,
+			Date timestamp) {
+		intializeTweetNode(id, user, text, lat, lon, timestamp, "default");
+	}
+
+	public TweetNode(long id, String user, String text, double lat, double lon,
+			Date timestamp, String sentiment) {
+		intializeTweetNode(id, user, text, lat, lon, timestamp, sentiment);
+	}
+
+	private void intializeTweetNode(long id, String user, String text,
+			double lat, double lon, Date timestamp, String sentiment) {
 		this.id = id;
 		this.username = user;
 		this.text = text;
 		this.latitude = lat;
 		this.longitude = lon;
 		this.timestamp = timestamp;
+		this.sentiment = sentiment;
 	}
-	
-	public TweetNode(JSONObject json){
+
+	public TweetNode(JSONObject json) {
 		try {
 			this.id = json.getLong("id");
 			this.latitude = json.getDouble("latitude");
 			this.longitude = json.getDouble("longitude");
 			this.text = json.getString("text");
 			this.username = json.getString("username");
-			this.timestamp = new Date(json.getLong("timestamp"));
+			this.timestamp = new Date(json.getLong("time_long"));
+			this.sentiment = json.getString("sentiment");
 		} catch (JSONException e) {
 			e.printStackTrace();
-		}	
+		}
 	}
-	
-	public void setSentiment(String str){
+
+	public void setSentiment(String str) {
 		this.sentiment = str;
 	}
 
-	public String getSentiment(){
+	public String getSentiment() {
 		return this.sentiment;
 	}
-	
+
 	public long getId() {
 		return this.id;
 	}
@@ -51,11 +64,11 @@ public class TweetNode {
 	public String getUsername() {
 		return username;
 	}
-	
+
 	public String getText() {
 		return text;
 	}
-	
+
 	public double getLongitude() {
 		return this.longitude;
 	}
@@ -71,10 +84,11 @@ public class TweetNode {
 	public String toString() {
 		return "Tweet Id: " + id + " username: " + username + " text: " + text
 				+ " Latitude: " + latitude + " Longitude: " + longitude
-				+ " Timestamp: " + timestamp.toString();
+				+ " Timestamp: " + timestamp.toString() + " sentiment: "
+				+ sentiment;
 	}
-	
-	public JSONObject toJSON(){
+
+	public JSONObject toJSON() {
 		JSONObject json = new JSONObject();
 		try {
 			json.put("id", this.id);
@@ -82,17 +96,12 @@ public class TweetNode {
 			json.put("longitude", this.longitude);
 			json.put("text", this.text);
 			json.put("username", this.username);
-			json.put("timestamp", this.timestamp.getTime());
-			if(this.sentiment != null){
-				json.put("sentiment", this.sentiment);
-			}
-		} catch (JSONException e){
+			json.put("timestamp", this.timestamp.toString());
+			json.put("time_long", this.timestamp.getTime());
+			json.put("sentiment", this.sentiment);
+		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 		return json;
-	}
-
-	public String getLatLongValue() {
-		return latitude + " " + longitude + " " + text;
 	}
 }

@@ -58,7 +58,7 @@ public class DBHelper {
 	}
 
 	public void insertTweetIntoDB(TweetNode node) {
-		String SQL = "insert into tweets values (?, ?, ?, ?, ?, ?)";
+		String SQL = "insert into tweets values (?, ?, ?, ?, ?, ?, ?)";
 		try {
 			PreparedStatement stmt = conn.prepareStatement(SQL);
 			stmt.setObject(1, node.getId(), java.sql.Types.BIGINT);
@@ -67,6 +67,7 @@ public class DBHelper {
 			stmt.setObject(4, node.getLatitude(), java.sql.Types.DOUBLE);
 			stmt.setObject(5, node.getLongitude(), java.sql.Types.DOUBLE);
 			stmt.setObject(6, node.getTimestamp(), java.sql.Types.TIMESTAMP);
+			stmt.setObject(7, node.getSentiment(), java.sql.Types.VARCHAR);
 			if(stmt.executeUpdate() > 0 && sqs != null){
 				sqs.sendMessageToQueue(this.queueURL, node.toJSON().toString());
 			}
@@ -89,7 +90,7 @@ public class DBHelper {
 						rs.getObject(2, String.class), rs.getObject(3,
 								String.class), rs.getObject(4, double.class),
 						rs.getObject(5, double.class), rs.getObject(6,
-								Date.class));
+								Date.class), rs.getObject(7, String.class));
 				list.add(node);
 			}
 		} catch (SQLException e) {

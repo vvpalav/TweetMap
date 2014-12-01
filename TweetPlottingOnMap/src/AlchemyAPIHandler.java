@@ -68,7 +68,7 @@ public class AlchemyAPIHandler {
 		}
 	}
 
-	public JSONObject performSentimentAnalysisOnTweet(String text) {
+	public static JSONObject performSentimentAnalysisOnTweet(String text) {
 		try {
 			String data = makeParamString(text);
 			URL url = new URL(Configuration.alchemyURL);
@@ -105,7 +105,7 @@ public class AlchemyAPIHandler {
 		return null;
 	}
 
-	public String makeParamString(String text) {
+	public static String makeParamString(String text) {
 		StringBuilder data = new StringBuilder();
 		try {
 			data.append("apikey=").append(Configuration.alchemyAPIKey);

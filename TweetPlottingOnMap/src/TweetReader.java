@@ -1,6 +1,9 @@
 import java.util.Date;
 import java.util.LinkedList;
 
+import com.amazonaws.util.json.JSONException;
+import com.amazonaws.util.json.JSONObject;
+
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
@@ -25,7 +28,7 @@ public final class TweetReader implements StatusListener {
 					reader.cb.build()).getInstance();
 			twitterStream.addListener(reader);
 			twitterStream.sample();
-			while (reader.db.getTweetCount() <= 200) {
+			while (reader.db.getTweetCount() <= 100) {
 				Thread.sleep(5000);
 			}
 			twitterStream.removeListener(reader);
@@ -50,9 +53,7 @@ public final class TweetReader implements StatusListener {
 	public void onStatus(Status status) {
 		if (status == null || status.getGeoLocation() == null)
 			return;
-
-		System.out.println("@" + status.getUser().getScreenName() + " - "
-				+ status.getText());
+		
 		double latitude = status.getGeoLocation().getLatitude();
 		double longitude = status.getGeoLocation().getLongitude();
 		long id = status.getId();
@@ -60,6 +61,15 @@ public final class TweetReader implements StatusListener {
 		String user = status.getUser().getScreenName();
 		String text = status.getText();
 		TweetNode node = new TweetNode(id, user, text, latitude, longitude, timestamp);
+		JSONObject out = AlchemyAPIHandler.performSentimentAnalysisOnTweet(node.getText());
+		try {
+			if(!out.getString("status").equalsIgnoreCase("error")){
+				node.setSentiment(out.getJSONObject("docSentiment").getString("type"));
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		System.out.println(node);
 		db.insertTweetIntoDB(node);
 	}
 

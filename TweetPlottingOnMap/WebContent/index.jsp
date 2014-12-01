@@ -24,9 +24,10 @@
 <script>
 	var httpKeywordReq, httpAllTweetReq, httpSpecificUserTweetReq, mapOptions, map;
 	var markers = []; 
-	var pinColorRed = "FE7569";
-	var pinColorGreen = "33FF00";
+	var pinColorNegative = "FE7569";
+	var pinColorPositive = "33FF00";
 	var pinColorNeutral = "FFFF33";
+	var pinColorDefault = "E3E3E3";
     
 	updateMapWithMarker('${twitterMsg}');
 	
@@ -40,10 +41,10 @@
 		}
 	}
 	
-	function addMarker(location, text) {
+	function addMarker(location, text, pc) {
 		var pinImage = new google.maps.MarkerImage(
 				"http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=%E2%80%A2|"
-						+ pinColorGreen, new google.maps.Size(21, 34),
+						+ pc, new google.maps.Size(21, 34),
 				new google.maps.Point(0, 0), new google.maps.Point(10, 34));
 
 		var pinShadow = new google.maps.MarkerImage(
@@ -134,9 +135,19 @@
 			for (var j = 0; j < data.length; j++) {
 				var json = JSON.parse(data[j]);
 				point = new google.maps.LatLng(json.latitude, json.longitude);
-				var text = "Username: @" + json.username + "\nTweet text: "
-						+ json.text;
-				addMarker(point, text);
+				var text = "Username: @" + json.username + "\n"
+						+ "Sentiment: " + json.sentiment + "\n"
+						+ "Timestamp: " + json.timestamp + "\n"
+						+ "Tweet text: " + json.text;
+				var pc = pinColorDefault;
+				if(json.sentiment == "positive"){
+					pc = pinColorPositive;
+				} else if(json.sentiment == "negative"){
+					pc = pinColorNegative;
+				} else if(json.sentiment == "neutral"){
+					pc = pinColorNeutral;
+				}
+				addMarker(point, text, pc);
 			}
 		}
 	}
@@ -170,16 +181,15 @@
 			var elem = document.getElementById('selectKeyword');
 			var strUser = elem.options[elem.selectedIndex].value;
 			if (strUser == "All Tweets") {
-				httpAllTweetReq = retrieveTweets("input=NoKeyword");
+				retrieveTweets("input=NoKeyword");
 			} else {
-				httpAllTweetReq = retrieveTweets("input=" + strUser);
+				retrieveTweets("input=" + strUser);
 			}
 		}
 	}
 
 	function handleTweetsResponseForGivenUser() {
 		if (httpSpecificUserTweetReq.readyState == 4) {
-			deleteMarkers();
 			var json = JSON.parse(httpSpecificUserTweetReq.responseText);
 			if (json.error == "success") {
 				var myVar = JSON.parse(httpSpecificUserTweetReq.responseText);
