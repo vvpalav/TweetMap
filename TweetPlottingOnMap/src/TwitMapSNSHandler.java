@@ -5,9 +5,10 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.CreateTopicRequest;
 import com.amazonaws.services.sns.model.DeleteTopicRequest;
+import com.amazonaws.services.sns.model.ListTopicsResult;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.SubscribeRequest;
-
+import com.amazonaws.services.sns.model.Topic;
 
 public class TwitMapSNSHandler {
 
@@ -20,7 +21,21 @@ public class TwitMapSNSHandler {
 		this.snsClient.setRegion(Region.getRegion(Regions.fromName(region)));
 	}
 	
+	public void deleteTopicIfExists(String topic){
+		ListTopicsResult list = snsClient.listTopics();
+		for(Topic t : list.getTopics()){
+			t.getTopicArn().endsWith(topic);
+			this.deleteSNSTopic(t.getTopicArn());
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public String createSNSTopic(String httpEndpoint){
+		deleteTopicIfExists(Configuration.snsTopic);
 		CreateTopicRequest createTopicRequest = new CreateTopicRequest(Configuration.snsTopic);
 		String topicArn = snsClient.createTopic(createTopicRequest).getTopicArn();
 		SubscribeRequest subRequest = new SubscribeRequest(topicArn, "http", httpEndpoint);

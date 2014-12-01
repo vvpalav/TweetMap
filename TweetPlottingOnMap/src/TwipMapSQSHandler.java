@@ -23,11 +23,14 @@ public class TwipMapSQSHandler {
 	private TwipMapSQSHandler() {
 		queueList = new HashMap<String, String>();
 		AWSCredentials credentials = new ProfileCredentialsProvider("EC2").getCredentials();
-		
 		sqsHandler = new AmazonSQSClient(credentials);
 		Region region = Region.getRegion(Regions.fromName(Configuration.queueRegion));
 		sqsHandler.setRegion(region);
 		queueList.put(Configuration.queueName, createMessageQueue(Configuration.queueName));
+	}
+	
+	public int getMessangeCountInQueue(String queueUrl){
+		return getMessagesFromQueue(queueUrl).size();
 	}
 
 	/**

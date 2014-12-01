@@ -29,9 +29,10 @@
 	var pinColorNeutral = "FFFF33";
 	var pinColorDefault = "E3E3E3";
     
-	updateMapWithMarker('${twitterMsg}');
+	updateMapWithMarker();
 	
 	function updateMapWithMarker(data) {
+		data = <%= request.getAttribute("twitterMsg") %>
 		if (data != null && data.length > 0) {
 			alert("Got data from HttpEndpoint " + data);
 			json = JSON.parse(data);

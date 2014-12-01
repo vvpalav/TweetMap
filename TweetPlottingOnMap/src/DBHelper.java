@@ -11,8 +11,6 @@ import com.mysql.jdbc.Connection;
 public class DBHelper {
 
 	private Connection conn;
-	private TwipMapSQSHandler sqs;
-	private String queueURL;
 
 	public static void main(String[] args) {
 		DBHelper db = new DBHelper();
@@ -32,12 +30,6 @@ public class DBHelper {
 
 	public DBHelper() {
 		initializeDBConn();
-	}
-
-	public DBHelper(TwipMapSQSHandler sqs) {
-		initializeDBConn();
-		this.sqs = sqs;
-		this.queueURL = this.sqs.getQueueURL(Configuration.queueName);
 	}
 
 	public void initializeDBConn() {
@@ -68,9 +60,7 @@ public class DBHelper {
 			stmt.setObject(5, node.getLongitude(), java.sql.Types.DOUBLE);
 			stmt.setObject(6, node.getTimestamp(), java.sql.Types.TIMESTAMP);
 			stmt.setObject(7, node.getSentiment(), java.sql.Types.VARCHAR);
-			if(stmt.executeUpdate() > 0 && sqs != null){
-				sqs.sendMessageToQueue(this.queueURL, node.toJSON().toString());
-			}
+			stmt.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("Error while inserting tweet into database");
 			e.printStackTrace();

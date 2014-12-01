@@ -51,7 +51,9 @@ public final class TweetReader implements StatusListener {
 	}
 
 	public void onStatus(Status status) {
-		if (status == null || status.getGeoLocation() == null)
+		if (status == null || status.getGeoLocation() == null 
+				|| status.getGeoLocation().getLatitude() == 0
+				|| status.getGeoLocation().getLongitude() == 0)
 			return;
 		
 		double latitude = status.getGeoLocation().getLatitude();

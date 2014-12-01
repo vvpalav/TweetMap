@@ -38,25 +38,27 @@ public class AlchemyAPIHandler {
 	public void processSQSMessage() {
 		while (true) {
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(1000);
 				List<Message> list = sqs.getMessagesFromQueue(this.queueUrl);
 				if (list != null) {
 					for (Message m : list) {
 						if (m.getBody().equals(Configuration.stopProcessingMsg)) {
-							changeLiveThreadsValue(-1);
-							break;
+							System.out.println("Received SQS" + Configuration.stopProcessingMsg);
+							int count = sqs.getMessangeCountInQueue(queueUrl);
+							if(count <= 1){
+								changeLiveThreadsValue(-1);
+								return;
+							}
+							System.out.println("Still " + count +" messages pending, continue processing");
+							continue;
 						}
-						sqs.deleteMessageFromQueue(this.queueUrl,
-								m.getReceiptHandle());
-						TweetNode node = new TweetNode(new JSONObject(
-								m.getBody()));
-						JSONObject json = performSentimentAnalysisOnTweet(node
-								.getText());
+						sqs.deleteMessageFromQueue(this.queueUrl, m.getReceiptHandle());
+						TweetNode node = new TweetNode(new JSONObject(m.getBody()));
+						JSONObject json = performSentimentAnalysisOnTweet(node.getText());
 						if (!json.getString("status").equalsIgnoreCase("error")) {
-							node.setSentiment(json
-									.getJSONObject("docSentiment").getString("type"));
-							sns.sendNotification(this.snsTopicArn, node
-									.toJSON().toString());
+							node.setSentiment(json.getJSONObject("docSentiment").getString("type"));
+							sns.sendNotification(this.snsTopicArn, node.toJSON().toString());
+							System.out.println("Sending notification for: " + node.toString());
 						}
 					}
 				}
@@ -93,7 +95,6 @@ public class AlchemyAPIHandler {
 			ostream.close();
 			in.close();
 			conn.disconnect();
-			System.out.println("response: " + response.toString());
 			return new JSONObject(response.toString());
 		} catch (MalformedURLException e) {
 			e.printStackTrace();

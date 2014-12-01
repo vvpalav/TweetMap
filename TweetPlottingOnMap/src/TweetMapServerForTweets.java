@@ -55,6 +55,8 @@ public class TweetMapServerForTweets extends HttpServlet {
 			json.put("data", array);
 		} catch (JSONException e) {
 			e.printStackTrace();
+		} finally {
+			db.close();
 		}
 		return json;
 	}

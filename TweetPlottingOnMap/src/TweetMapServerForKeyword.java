@@ -49,6 +49,7 @@ public class TweetMapServerForKeyword extends HttpServlet {
 			out.println(json.toString());
 			out.flush();
 			out.close();
+			db.close();
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}

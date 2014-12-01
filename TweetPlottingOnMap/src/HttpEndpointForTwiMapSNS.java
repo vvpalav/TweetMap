@@ -5,7 +5,6 @@ import java.security.Signature;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Scanner;
-import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -21,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class HttpEndpointForTwiMapSNS extends HttpServlet {
 
 	private static final long serialVersionUID = 2306967918597987927L;
-	private Logger log = Logger.getLogger(HttpEndpointForTwiMapSNS.class.getName());
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -41,15 +39,23 @@ public class HttpEndpointForTwiMapSNS extends HttpServlet {
 			builder.append(scan.nextLine());
 		}
 		scan.close();
+		System.out.println("Received SNS: " + builder.toString());
 		SNSMessage msg = readMessageFromJson(builder.toString());
-		validateMessage(msg);
 
+		/*if (msg.getSignatureVersion().equals("1")) {
+			if (isMessageSignatureValid(msg))
+				System.out.println("Signature verification succeeded");
+			else {
+				System.out.println("Signature verification failed");
+				throw new SecurityException("Signature verification failed.");
+			}
+		}
+		else {
+			System.out.println("Unexpected signature version. Unable to verify signature.");
+			throw new SecurityException("Unexpected signature version. Unable to verify signature.");
+		}*/
+		
 		if (messagetype.equals("Notification")) {
-			String logMsgAndSubject = "Notification: Topic "
-					+ msg.getTopicArn();
-			logMsgAndSubject += " Subject: " + msg.getSubject();
-			logMsgAndSubject += " Message: " + msg.getMessage();
-			log.info(logMsgAndSubject);
 			forwardMessageToJSPPage(req, resp, msg.getMessage());
 		} else if (messagetype.equals("SubscriptionConfirmation")) {
 			Scanner sc = new Scanner(
@@ -61,61 +67,51 @@ public class HttpEndpointForTwiMapSNS extends HttpServlet {
 			sc.close();
 			SNSHelper.INSTANCE.confirmTopicSubmission(msg);
 		}
-		log.info("Done processing message: " + msg.getMessageId());
+		System.out.println("Done processing message: " + msg.getMessageId());
 	}
 
-	private void validateMessage(SNSMessage msg) {
-		if (msg.getSignatureVersion().equals("1")) {
-			if (isMessageSignatureValid(msg))
-				log.info("Signature verification succeeded");
-			else {
-				log.info("Signature verification failed");
-				throw new SecurityException("Signature verification failed.");
-			}
-		} else {
-			log.info("Unexpected signature version. Unable to verify signature.");
-			throw new SecurityException("Unable to verify signature.");
+	@SuppressWarnings("unused")
+	private boolean isMessageSignatureValid(SNSMessage msg) {
+
+		try {
+			URL url = new URL(msg.getSigningCertUrl());
+			InputStream inStream = url.openStream();
+			CertificateFactory cf = CertificateFactory.getInstance("X.509");
+			X509Certificate cert = (X509Certificate)cf.generateCertificate(inStream);
+			inStream.close();
+
+			Signature sig = Signature.getInstance("SHA1withRSA");
+			sig.initVerify(cert.getPublicKey());
+			sig.update(getMessageBytesToSign(msg));
+			return sig.verify(Base64.decodeBase64(msg.getSignature().getBytes()));
 		}
+		catch (Exception e) {
+			throw new SecurityException("Verify method failed.", e);
+		}
+	}
+
+	private byte[] getMessageBytesToSign(SNSMessage msg) {
+
+		byte [] bytesToSign = null;
+		if (msg.getType().equals("Notification"))
+			bytesToSign = buildNotificationStringToSign(msg).getBytes();
+		else if (msg.getType().equals("SubscriptionConfirmation") || msg.getType().equals("UnsubscribeConfirmation"))
+			bytesToSign = buildSubscriptionStringToSign(msg).getBytes();
+		return bytesToSign;
 	}
 
 	private void forwardMessageToJSPPage(HttpServletRequest request,
 			HttpServletResponse response, String message) {
 		try {
+			System.out.println("Forwarding tweet to webpage: " + message); 
 			request.setAttribute("twitterMsg", message);
-			getServletContext().getRequestDispatcher("/index.jsp").forward(
-					request, response);
+			getServletContext().getRequestDispatcher("/index.jsp")
+				.include(request, response);
 		} catch (ServletException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private static boolean isMessageSignatureValid(SNSMessage msg) {
-		try {
-			URL url = new URL(msg.getSigningCertUrl());
-			InputStream inStream = url.openStream();
-			CertificateFactory cf = CertificateFactory.getInstance("X.509");
-			X509Certificate cert = (X509Certificate) cf
-					.generateCertificate(inStream);
-			inStream.close();
-			Signature sig = Signature.getInstance("SHA1withRSA");
-			sig.initVerify(cert.getPublicKey());
-			sig.update(getMessageBytesToSign(msg));
-			return sig.verify(Base64.decodeBase64(msg.getSignature()));
-		} catch (Exception e) {
-			throw new SecurityException("Verify method failed.", e);
-		}
-	}
-
-	private static byte[] getMessageBytesToSign(SNSMessage msg) {
-		byte[] bytesToSign = null;
-		if (msg.getType().equals("Notification"))
-			bytesToSign = buildNotificationStringToSign(msg).getBytes();
-		else if (msg.getType().equals("SubscriptionConfirmation")
-				|| msg.getType().equals("UnsubscribeConfirmation"))
-			bytesToSign = buildSubscriptionStringToSign(msg).getBytes();
-		return bytesToSign;
 	}
 
 	public static String buildNotificationStringToSign(SNSMessage msg) {
