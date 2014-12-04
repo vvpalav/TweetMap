@@ -174,7 +174,7 @@
 			httpSpecificUserTweetReq.send("username=" + txt);
 			
 			deleteMarkers();
-			interval = setInterval(function(){ retrieveTweets("type=live"); }, 3000);
+			interval = setInterval(function(){ retrieveTweets("type=live"); }, 5000);
 		} else {
 			var elem = document.getElementById('selectKeyword');
 			var strUser = elem.options[elem.selectedIndex].value;

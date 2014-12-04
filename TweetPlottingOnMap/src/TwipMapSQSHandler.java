@@ -21,6 +21,7 @@ public class TwipMapSQSHandler {
 	private static TwipMapSQSHandler twipMapSQSHandler;
 
 	private TwipMapSQSHandler() {
+		System.out.println("Initializing SQS Handler");
 		queueList = new HashMap<String, String>();
 		AWSCredentials credentials = new ProfileCredentialsProvider("EC2").getCredentials();
 		sqsHandler = new AmazonSQSClient(credentials);
@@ -60,19 +61,16 @@ public class TwipMapSQSHandler {
 	 */
 	public synchronized String createMessageQueue(String myQueueName) {
 		ListQueuesResult l = sqsHandler.listQueues();
-		for (String s :l.getQueueUrls()){
+		for (String s : l.getQueueUrls()){
 			if(s.contains(myQueueName)){
-				deleteQueue(getQueueURL(myQueueName));
-				queueList.remove(myQueueName);
-				try {
-					System.out.println("Wait for 70 secs before "
-							+ "creating new queue after delete queue");
-					Thread.sleep(70 * 1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				System.out.println("SQS Queue already exists: " + s);
+				for(Message m : getMessagesFromQueue(s)){
+					deleteMessageFromQueue(s, m.getReceiptHandle());
 				}
+				return s;
 			}
 		}
+		System.out.println("Creating new SQS Queue");
 		CreateQueueRequest request = new CreateQueueRequest(myQueueName);
 		return sqsHandler.createQueue(request).getQueueUrl();
 	}

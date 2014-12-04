@@ -25,7 +25,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 	private ConfigurationBuilder cb;
 	private TwipMapSQSHandler sqs;
 	private String queueUrl;
-	private static final int threadCount = 1;
+	private static final int threadCount = 3;
 
 	public static void main(String[] args) throws ServletException, IOException {
 		new TwitterReaderForParticularUser().doPost(null, null);
@@ -116,6 +116,9 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 			e.printStackTrace();
 		} finally {
 			System.out.println("Finished Processing all tweets");
+			for(Message m : sqs.getMessagesFromQueue(queueUrl)){
+				sqs.deleteMessageFromQueue(queueUrl, m.getReceiptHandle());
+			}
 		}
 	}
 

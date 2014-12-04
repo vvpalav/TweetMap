@@ -32,7 +32,7 @@ public class TweetMapServerForTweets extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		
+		TwipMapSQSHandler.getSQSHandler();
 		String word = req.getParameter("input");
 		String type = req.getParameter("type");
 		log.info("received request with type " + type + " and word " + word);
