@@ -15,7 +15,6 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
-import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.util.json.JSONException;
 import com.amazonaws.util.json.JSONObject;
 
@@ -55,6 +54,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 
 			startAlchemyThreads(sqs);
 			String name = req.getParameter("username");
+			sqs.deleteAllMessagesFromQueue(Configuration.queueName);
 			Twitter twitter = new TwitterFactory(cb.build()).getInstance();
 			System.out.println("Received twit analysis for " + name);
 			Query query = new Query(name);
@@ -65,8 +65,8 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 					break;
 				List<Status> tweets = result.getTweets();
 				for (Status tweet : tweets) {
-					if (tweet.getGeoLocation() != null
-							&& tweet.getText().contains("@")) {
+					if (tweet.getGeoLocation() != null && tweet.getGeoLocation().getLatitude() != 0
+							&& tweet.getGeoLocation().getLongitude() != 0) {
 						count++;
 						double latitude = tweet.getGeoLocation().getLatitude();
 						double longitude = tweet.getGeoLocation().getLongitude();
@@ -81,7 +81,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 						sqs.sendMessageToQueue(queueUrl, node.toJSON().toString());
 					}
 				}
-				if (count >= 30)
+				if (count >= 40)
 					break;
 			} while ((query = result.nextQuery()) != null);
 			JSONObject json = new JSONObject();
@@ -116,17 +116,12 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 			e.printStackTrace();
 		} finally {
 			System.out.println("Finished Processing all tweets");
-			for(Message m : sqs.getMessagesFromQueue(queueUrl)){
-				sqs.deleteMessageFromQueue(queueUrl, m.getReceiptHandle());
-			}
+			sqs.deleteAllMessagesFromQueue(Configuration.queueName);
 		}
 	}
 
 	public void startAlchemyThreads(final TwipMapSQSHandler sqs) {
-		List<Message> list = sqs.getMessagesFromQueue(queueUrl);
-		for (Message m : list) {
-			sqs.deleteMessageFromQueue(queueUrl, m.getReceiptHandle());
-		}
+		sqs.deleteAllMessagesFromQueue(Configuration.queueName);
 		for (int i = 0; i < threadCount; ++i) {
 			AlchemyAPIHandler.changeLiveThreadsValue(1);
 			new Thread(new Runnable() {

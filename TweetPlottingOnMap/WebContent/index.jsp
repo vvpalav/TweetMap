@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Heat Maps</title>
+<title>Twitter Maps Sentiment Analysis</title>
 <style>
        html, body, #map-canvas {
         height: 100%;

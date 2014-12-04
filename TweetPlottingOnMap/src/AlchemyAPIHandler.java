@@ -38,13 +38,14 @@ public class AlchemyAPIHandler {
 	public void processSQSMessage() {
 		while (true) {
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(3000);
 				List<Message> list = sqs.getMessagesFromQueue(this.queueUrl);
 				if (list != null) {
 					for (Message m : list) {
 						if (m.getBody().equals(Configuration.stopProcessingMsg)) {
-							System.out.println("Received SQS" + Configuration.stopProcessingMsg);
 							int count = sqs.getMessangeCountInQueue(queueUrl);
+							System.out.println("Received SQS" + Configuration.stopProcessingMsg
+									+ " pending msgs: " + count);
 							if(count <= 1){
 								changeLiveThreadsValue(-1);
 								return;
@@ -57,6 +58,10 @@ public class AlchemyAPIHandler {
 						JSONObject json = performSentimentAnalysisOnTweet(node.getText());
 						if (!json.getString("status").equalsIgnoreCase("error")) {
 							node.setSentiment(json.getJSONObject("docSentiment").getString("type"));
+							sns.sendNotification(this.snsTopicArn, node.toJSON().toString());
+							System.out.println("Sending notification for: " + node.toString());
+						} else {
+							node.setSentiment("default");
 							sns.sendNotification(this.snsTopicArn, node.toJSON().toString());
 							System.out.println("Sending notification for: " + node.toString());
 						}

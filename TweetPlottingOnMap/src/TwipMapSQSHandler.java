@@ -31,7 +31,8 @@ public class TwipMapSQSHandler {
 	}
 	
 	public int getMessangeCountInQueue(String queueUrl){
-		return getMessagesFromQueue(queueUrl).size();
+		List<Message> ll = getMessagesFromQueue(queueUrl);
+		return (ll == null) ? 0 : ll.size();
 	}
 
 	/**
@@ -46,7 +47,18 @@ public class TwipMapSQSHandler {
 		if (twipMapSQSHandler == null) {
 			twipMapSQSHandler = new TwipMapSQSHandler();
 		}
+		twipMapSQSHandler.deleteAllMessagesFromQueue(Configuration.queueName);
 		return twipMapSQSHandler;
+	}
+	
+	public void deleteAllMessagesFromQueue(String queueName){
+		String myQueueUrl = getQueueURL(queueName);
+		List<Message> ll = getMessagesFromQueue(myQueueUrl);
+		if(ll != null){
+			for (Message m : ll){
+				deleteMessageFromQueue(myQueueUrl, m.getReceiptHandle());
+			}
+		}
 	}
 
 	/**
@@ -61,12 +73,9 @@ public class TwipMapSQSHandler {
 	 */
 	public synchronized String createMessageQueue(String myQueueName) {
 		ListQueuesResult l = sqsHandler.listQueues();
-		for (String s : l.getQueueUrls()){
-			if(s.contains(myQueueName)){
+		for (String s : l.getQueueUrls()) {
+			if (s.contains(myQueueName)) {
 				System.out.println("SQS Queue already exists: " + s);
-				for(Message m : getMessagesFromQueue(s)){
-					deleteMessageFromQueue(s, m.getReceiptHandle());
-				}
 				return s;
 			}
 		}
