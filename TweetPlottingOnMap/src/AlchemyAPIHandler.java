@@ -19,6 +19,7 @@ public class AlchemyAPIHandler {
 	private TwitMapSNSHandler sns;
 	private String snsTopicArn;
 	private static int liveThreads = 0;
+	private int idleCount = 5;
 
 	public AlchemyAPIHandler(TwipMapSQSHandler sqs) {
 		this.sqs = sqs;
@@ -66,6 +67,13 @@ public class AlchemyAPIHandler {
 							System.out.println("Sending notification for: " + node.toString());
 						}
 					}
+				} else {
+					idleCount--;
+				}
+				if(idleCount == 0){
+					System.out.println("Too many idle sleeps, aborting, Thread - 1");
+					changeLiveThreadsValue(-1);
+					return;
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();

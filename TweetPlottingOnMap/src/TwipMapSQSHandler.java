@@ -127,6 +127,10 @@ public class TwipMapSQSHandler {
 	public synchronized List<Message> getMessagesFromQueue(String myQueueUrl) {
 		if (queueList.containsValue(myQueueUrl)) {
 			ReceiveMessageRequest request = new ReceiveMessageRequest(myQueueUrl);
+			List<Message> ll = sqsHandler.receiveMessage(request).getMessages();
+			if(ll.size() == 0){
+				return null;
+			}
 			return sqsHandler.receiveMessage(request).getMessages();
 		}
 		return null;

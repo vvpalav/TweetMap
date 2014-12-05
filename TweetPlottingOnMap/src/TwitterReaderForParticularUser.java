@@ -65,11 +65,13 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 					break;
 				List<Status> tweets = result.getTweets();
 				for (Status tweet : tweets) {
-					if (tweet.getGeoLocation() != null && tweet.getGeoLocation().getLatitude() != 0
+					if (tweet.getGeoLocation() != null
+							&& tweet.getGeoLocation().getLatitude() != 0
 							&& tweet.getGeoLocation().getLongitude() != 0) {
 						count++;
 						double latitude = tweet.getGeoLocation().getLatitude();
-						double longitude = tweet.getGeoLocation().getLongitude();
+						double longitude = tweet.getGeoLocation()
+								.getLongitude();
 						long id = tweet.getId();
 						Date timestamp = tweet.getCreatedAt();
 						String user = tweet.getUser().getScreenName();
@@ -78,7 +80,8 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 								latitude, longitude, timestamp);
 						node.setType("live");
 						System.out.println(node.toString());
-						sqs.sendMessageToQueue(queueUrl, node.toJSON().toString());
+						sqs.sendMessageToQueue(queueUrl, node.toJSON()
+								.toString());
 					}
 				}
 				if (count >= 40)
@@ -90,15 +93,9 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 			resp.getWriter().flush();
 			resp.getWriter().close();
 			Thread.sleep(2000);
-			sqs.sendMessageToQueue(queueUrl, Configuration.stopProcessingMsg);
-			while (AlchemyAPIHandler.getLiveThreadsValue() > 0) {
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
+			sendStopProcessingMsg();
 		} catch (TwitterException e) {
+			sendStopProcessingMsg();
 			JSONObject json = new JSONObject();
 			try {
 				json.put("msg", "exception");
@@ -111,12 +108,25 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 			}
 			e.printStackTrace();
 		} catch (InterruptedException e1) {
+			sendStopProcessingMsg();
 			e1.printStackTrace();
 		} catch (JSONException e) {
+			sendStopProcessingMsg();
 			e.printStackTrace();
 		} finally {
 			System.out.println("Finished Processing all tweets");
 			sqs.deleteAllMessagesFromQueue(Configuration.queueName);
+		}
+	}
+
+	public void sendStopProcessingMsg() {
+		sqs.sendMessageToQueue(queueUrl, Configuration.stopProcessingMsg);
+		while (AlchemyAPIHandler.getLiveThreadsValue() > 0) {
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 		}
 	}
 
