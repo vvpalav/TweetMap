@@ -46,7 +46,7 @@ public class TweetMapServerForTweets extends HttpServlet {
 	public static JSONObject retrieveTweetData(String word, String type) {
 		JSONObject json = new JSONObject();
 		JSONArray array = new JSONArray();
-		DBHelper db = new DBHelper();
+		DBHelper db = DBHelper.getDBInstance();;
 		try {
 			for (TweetNode node : db.getAllTweetsFromDB(word, type)) {
 				array.put(node.toJSON().toString());
@@ -65,8 +65,6 @@ public class TweetMapServerForTweets extends HttpServlet {
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
-		} finally {
-			db.close();
 		}
 		return json;
 	}

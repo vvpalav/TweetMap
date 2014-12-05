@@ -11,28 +11,20 @@ import com.mysql.jdbc.Connection;
 public class DBHelper {
 
 	private Connection conn;
+	private static DBHelper db;
 
-	public static void main(String[] args) {
-		DBHelper db = new DBHelper();
-
-		TweetNode node = new TweetNode(4, "vinayak", "sometext", 38.898556,
-				-77.037852, new java.util.Date());
-		db.insertTweetIntoDB(node);
-		for (TweetNode n : db.getAllTweetsFromDB(null, null)) {
-			System.out.println(n);
-		}
-
-		for (String str : db.getListOfKeywords()) {
-			System.out.println(str);
-		}
-		db.close();
-	}
-
-	public DBHelper() {
+	private DBHelper() {
 		initializeDBConn();
 	}
+	
+	public synchronized static DBHelper getDBInstance(){
+		if(db == null){
+			db = new DBHelper();
+		}
+		return db;
+	}
 
-	public void initializeDBConn() {
+	private void initializeDBConn() {
 		try {
 			System.out.println("Connecting to database");
 			Class.forName("com.mysql.jdbc.Driver");
@@ -171,14 +163,5 @@ public class DBHelper {
 			e.printStackTrace();
 		}
 		return 0;
-	}
-
-	public void close() {
-		try {
-			conn.close();
-			System.out.println("Closing connection to database");
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 	}
 }

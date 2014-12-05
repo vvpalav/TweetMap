@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class HttpEndpointForTwiMapSNS extends HttpServlet {
 
 	private static final long serialVersionUID = 2306967918597987927L;
-	private DBHelper db = new DBHelper();
+	private DBHelper db = DBHelper.getDBInstance();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)

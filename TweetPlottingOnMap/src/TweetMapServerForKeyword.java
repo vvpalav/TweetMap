@@ -35,7 +35,7 @@ public class TweetMapServerForKeyword extends HttpServlet {
 			throws ServletException, IOException {
 		try {
 			JSONObject json = new JSONObject();
-			DBHelper db = new DBHelper();
+			DBHelper db = DBHelper.getDBInstance();;
 			JSONArray keywords = new JSONArray();
 			HashSet<String> set = new HashSet<String>();
 			for (String str : db.getListOfKeywords()) {
@@ -50,7 +50,6 @@ public class TweetMapServerForKeyword extends HttpServlet {
 			out.println(json.toString());
 			out.flush();
 			out.close();
-			db.close();
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}

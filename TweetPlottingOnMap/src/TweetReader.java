@@ -34,14 +34,13 @@ public final class TweetReader implements StatusListener {
 			twitterStream.removeListener(reader);
 		} finally {
 			Thread.sleep(6000);
-			reader.db.close();
 			System.exit(0);
 		}
 	}
 
 	public TweetReader() {
 		this.list = new LinkedList<Long>();
-		this.db = new DBHelper();
+		this.db = DBHelper.getDBInstance();;
 		this.cb = new ConfigurationBuilder();
 		this.cb.setDebugEnabled(true)
 				.setOAuthConsumerKey(Configuration.twitterConsumerKey)
