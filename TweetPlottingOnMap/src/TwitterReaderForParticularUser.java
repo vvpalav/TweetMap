@@ -25,6 +25,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 	private TwipMapSQSHandler sqs;
 	private String queueUrl;
 	private static final int threadCount = 3;
+	private int tweetReceived = 0; 
 
 	public static void main(String[] args) throws ServletException, IOException {
 		new TwitterReaderForParticularUser().doPost(null, null);
@@ -65,6 +66,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 					break;
 				List<Status> tweets = result.getTweets();
 				for (Status tweet : tweets) {
+					tweetReceived++;
 					if (tweet.getGeoLocation() != null
 							&& tweet.getGeoLocation().getLatitude() != 0
 							&& tweet.getGeoLocation().getLongitude() != 0) {
@@ -95,6 +97,7 @@ public class TwitterReaderForParticularUser extends HttpServlet {
 			Thread.sleep(2000);
 			sendStopProcessingMsg();
 		} catch (TwitterException e) {
+			System.out.println("Exception processed tweets: " + tweetReceived);
 			sendStopProcessingMsg();
 			JSONObject json = new JSONObject();
 			try {
